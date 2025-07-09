@@ -7,14 +7,6 @@ const defaultLocale = 'es-AR'
 
 // Get the preferred locale
 function getLocale(request: NextRequest): string {
-  // Check URL pathname for locale
-  const pathname = request.nextUrl.pathname
-  const pathnameLocale = locales.find(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
-  )
-
-  if (pathnameLocale) return pathnameLocale
-
   // Check Accept-Language header
   const acceptLanguage = request.headers.get('accept-language')
   if (acceptLanguage) {
@@ -32,24 +24,38 @@ function getLocale(request: NextRequest): string {
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Check if pathname is missing locale
-  const pathnameIsMissingLocale = locales.every(
-    (locale) =>
-      !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`,
+  // Skip if it's a static file or API route
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.includes('.') ||
+    pathname.startsWith('/favicon')
+  ) {
+    return NextResponse.next()
+  }
+
+  // Check if pathname already has a locale
+  const pathnameHasLocale = locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   )
 
-  // Redirect if there is no locale
-  if (pathnameIsMissingLocale) {
-    const locale = getLocale(request)
-    return NextResponse.redirect(new URL(`/${locale}${pathname}`, request.url))
+  if (pathnameHasLocale) {
+    return NextResponse.next()
   }
+
+  // Redirect to add locale
+  const locale = getLocale(request)
+  const newUrl = new URL(
+    `/${locale}${pathname === '/' ? '' : pathname}`,
+    request.url,
+  )
+
+  return NextResponse.redirect(newUrl)
 }
 
 export const config = {
   matcher: [
-    // Skip all internal paths (_next)
-    '/((?!_next|api|favicon.ico).*)',
-    // Optional: only run on root (/) URL
-    // '/'
+    // Skip all internal paths and files
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)',
   ],
 }
