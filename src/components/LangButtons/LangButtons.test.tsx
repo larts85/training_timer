@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import LangButtons from '.'
+import LangButtons from './LangButtons'
 
 const mockRouter = jest.fn()
 
