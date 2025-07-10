@@ -3,37 +3,47 @@ import '@testing-library/jest-dom'
 import LangButtons from './LangButtons'
 
 // Mock next/navigation
+const mockUsePathname = jest.fn()
 jest.mock('next/navigation', () => ({
-  usePathname: () => '/en-US',
+  usePathname: () => mockUsePathname(),
 }))
 
 describe('LangButtons', () => {
-  it('should renders a button for each available language', () => {
-    render(<LangButtons currentLocale="en-US" />)
-
-    const spanishButton = screen.getByRole('link', { name: /es/i })
-    expect(spanishButton).toBeInTheDocument()
-
-    const portugueseButton = screen.getByRole('link', { name: /pt/i })
-    expect(portugueseButton).toBeInTheDocument()
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
-  it('should not generate a button for the current language', () => {
+  it('should render language buttons excluding current locale', () => {
+    mockUsePathname.mockReturnValue('/en-US')
+
     render(<LangButtons currentLocale="en-US" />)
 
-    const englishButton = screen.queryByRole('link', { name: /en/i })
-    expect(englishButton).not.toBeInTheDocument()
+    expect(screen.getByText('es')).toBeInTheDocument()
+    expect(screen.getByText('pt')).toBeInTheDocument()
+    expect(screen.queryByText('en')).not.toBeInTheDocument()
   })
 
-  it('should have correct href attributes for language buttons', () => {
+  it('should generate correct href for different locales', () => {
+    mockUsePathname.mockReturnValue('/en-US/some-page')
+
     render(<LangButtons currentLocale="en-US" />)
 
-    // With currentLocale="en-US", we should have buttons for "es" and "pt"
-    const spanishLink = screen.getByRole('link', { name: /es/i })
-    const portugueseLink = screen.getByRole('link', { name: /pt/i })
+    const esLink = screen.getByText('es').closest('a')
+    const ptLink = screen.getByText('pt').closest('a')
 
-    // Verify the href attributes are correct
-    expect(spanishLink).toHaveAttribute('href', '/es-AR')
-    expect(portugueseLink).toHaveAttribute('href', '/pt-BR')
+    expect(esLink).toHaveAttribute('href', '/es-AR/some-page')
+    expect(ptLink).toHaveAttribute('href', '/pt-BR/some-page')
+  })
+
+  it('should handle root path correctly', () => {
+    mockUsePathname.mockReturnValue('/pt-BR')
+
+    render(<LangButtons currentLocale="pt-BR" />)
+
+    const enLink = screen.getByText('en').closest('a')
+    const esLink = screen.getByText('es').closest('a')
+
+    expect(enLink).toHaveAttribute('href', '/en-US')
+    expect(esLink).toHaveAttribute('href', '/es-AR')
   })
 })

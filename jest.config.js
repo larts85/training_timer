@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
@@ -41,14 +41,11 @@ const customJestConfig = {
     '!<rootDir>/src/**/*.d.ts',
     '!<rootDir>/src/types/*.ts',
     '!<rootDir>/src/styles/*.ts',
-    // Exclude App Router infrastructure files
-    '!<rootDir>/src/middleware.ts',
-    '!<rootDir>/src/app/layout.tsx',
-    '!<rootDir>/src/app/not-found.tsx',
-    '!<rootDir>/src/app/[locale]/layout.tsx',
     // Exclude configuration files
     '!<rootDir>/src/utils/config.ts',
     '!<rootDir>/src/locales/resources.ts',
+    // Exclude middleware due to Next.js testing complexity
+    '!<rootDir>/src/middleware.ts',
   ],
   coveragePathIgnorePatterns: [
     '<rootDir>/jest.*',
@@ -61,10 +58,10 @@ const customJestConfig = {
   coverageReporters: ['lcov', 'html', 'json', 'text', 'text-summary'],
   coverageThreshold: {
     global: {
-      branches: 50,
-      functions: 60,
-      lines: 60,
-      statements: 60,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
     },
   },
 }
