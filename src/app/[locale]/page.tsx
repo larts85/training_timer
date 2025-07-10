@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
-import Header from '@/components/Header/Header'
-import Button from '@/components/Button/Button'
+import AppClient from '@/components/App/AppClient'
 import { getTranslations } from '@/utils/translations'
 
 type Props = {
@@ -21,13 +20,5 @@ export default async function HomePage({ params }: Props) {
   const { locale } = await params
   const translations = await getTranslations(locale)
 
-  return (
-    <>
-      <Header locale={locale} />
-      <main>
-        <h1>{translations.home.greeting}</h1>
-        <Button cta="Save changes" className="btn-primary" />
-      </main>
-    </>
-  )
+  return <AppClient locale={locale} greeting={translations.home.greeting} />
 }

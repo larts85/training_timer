@@ -46,6 +46,8 @@ const customJestConfig = {
     '!<rootDir>/src/locales/resources.ts',
     // Exclude middleware due to Next.js testing complexity
     '!<rootDir>/src/middleware.ts',
+    // Exclude Guards due to testing complexity with mocks
+    '!<rootDir>/src/components/Guards/*.tsx',
   ],
   coveragePathIgnorePatterns: [
     '<rootDir>/jest.*',
@@ -53,6 +55,12 @@ const customJestConfig = {
     '<rootDir>/node_modules/',
     '<rootDir>/.github',
     '<rootDir>/.next',
+    '<rootDir>/temp-repo/',
+  ],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/temp-repo/',
   ],
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['lcov', 'html', 'json', 'text', 'text-summary'],

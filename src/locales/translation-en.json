@@ -8,5 +8,15 @@
     "home": "Home",
     "contact": "Contact",
     "anchorTitle": "Page"
+  },
+  "dashboard": {
+    "title": "Training Timer"
+  },
+  "timer": {
+    "cycles": "Cycles"
+  },
+  "controllers": {
+    "start": "Start",
+    "pause": "Pause"
   }
 }
