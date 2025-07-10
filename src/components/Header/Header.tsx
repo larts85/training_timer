@@ -1,12 +1,17 @@
 import { FC } from 'react'
-import useTranslations from '../../hooks/useTranslations'
-import LangButtons from '@/components/LangButtons'
+import { getStaticTranslations } from '@/utils/translations'
+import LangButtons from '@/components/LangButtons/LangButtons'
 
-const Header: FC = () => {
-  const { translations } = useTranslations()
+interface HeaderProps {
+  locale: string
+}
+
+const Header: FC<HeaderProps> = ({ locale }) => {
+  const translations = getStaticTranslations(locale)
+
   return (
     <header className="flex justify-between">
-      <LangButtons />
+      <LangButtons currentLocale={locale} />
       <nav>
         <ul className="flex gap-1">
           <li>{translations.navLinks.home}</li>

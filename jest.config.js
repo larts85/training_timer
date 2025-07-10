@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
@@ -41,6 +41,11 @@ const customJestConfig = {
     '!<rootDir>/src/**/*.d.ts',
     '!<rootDir>/src/types/*.ts',
     '!<rootDir>/src/styles/*.ts',
+    // Exclude configuration files
+    '!<rootDir>/src/utils/config.ts',
+    '!<rootDir>/src/locales/resources.ts',
+    // Exclude middleware due to Next.js testing complexity
+    '!<rootDir>/src/middleware.ts',
   ],
   coveragePathIgnorePatterns: [
     '<rootDir>/jest.*',
