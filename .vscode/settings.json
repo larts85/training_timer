@@ -1,0 +1,17 @@
+{
+  "jest.jestCommandLine": "npx jest",
+  "jest.rootPath": ".",
+  "jest.testExplorerEnabled": true,
+  "jest.autoRun": "off",
+  "jest.showCoverageOnLoad": false,
+  "jest.testMatch": [
+    "**/__tests__/**/*.(js|jsx|ts|tsx)",
+    "**/*.(test|spec).(js|jsx|ts|tsx)"
+  ],
+  "testing.automaticallyOpenPeekView": "never",
+  "jest.pathToJest": "npx jest",
+  "jest.pathToConfig": "jest.config.js",
+  "jest.nodeEnv": {
+    "NODE_ENV": "test"
+  }
+}

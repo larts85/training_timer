@@ -1,62 +1,39 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import LangButtons from './LangButtons'
 
-const mockRouter = jest.fn()
-
-jest.mock('next/router', () => ({
-  ...jest.requireActual('next/router'),
-  useRouter: () => mockRouter(),
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  usePathname: () => '/en-US',
 }))
 
 describe('LangButtons', () => {
   it('should renders a button for each available language', () => {
-    mockRouter.mockReturnValue({
-      asPath: '/',
-      locale: 'en-US',
-      locales: ['en-US', 'es-AR', 'pt-BR'],
-    })
-    render(<LangButtons />)
+    render(<LangButtons currentLocale="en-US" />)
 
     const spanishButton = screen.getByRole('link', { name: /es/i })
     expect(spanishButton).toBeInTheDocument()
+
+    const portugueseButton = screen.getByRole('link', { name: /pt/i })
+    expect(portugueseButton).toBeInTheDocument()
   })
 
   it('should not generate a button for the current language', () => {
-    mockRouter.mockReturnValue({
-      asPath: '/',
-      locale: 'en-US',
-      locales: ['en-US', 'es-AR', 'pt-BR'],
-    })
-    render(<LangButtons />)
+    render(<LangButtons currentLocale="en-US" />)
 
     const englishButton = screen.queryByRole('link', { name: /en/i })
     expect(englishButton).not.toBeInTheDocument()
   })
 
-  it.skip('should change path on button click', () => {
-    const onMock = jest.fn(() => Promise.resolve(true))
-    const emitMock = jest.fn(() => Promise.resolve(true))
-    const pushMock = jest.fn(() => Promise.resolve(true))
+  it('should have correct href attributes for language buttons', () => {
+    render(<LangButtons currentLocale="en-US" />)
 
-    mockRouter.mockImplementation(() => ({
-      push: pushMock,
-      prefetch: () => Promise.resolve(true),
-      asPath: 'pt-BR',
-      events: {
-        off: jest.fn(),
-        emit: emitMock,
-        on: onMock,
-      },
-    }))
+    // With currentLocale="en-US", we should have buttons for "es" and "pt"
+    const spanishLink = screen.getByRole('link', { name: /es/i })
+    const portugueseLink = screen.getByRole('link', { name: /pt/i })
 
-    render(<LangButtons />)
-
-    const portugueseButton = screen.getByRole('button', { name: /pt/i })
-    fireEvent.click(portugueseButton)
-
-    expect(pushMock).toHaveBeenCalled()
-    expect(emitMock).toHaveBeenCalled()
-    expect(onMock).toHaveBeenCalled()
+    // Verify the href attributes are correct
+    expect(spanishLink).toHaveAttribute('href', '/es-AR')
+    expect(portugueseLink).toHaveAttribute('href', '/pt-BR')
   })
 })

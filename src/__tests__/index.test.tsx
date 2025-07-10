@@ -9,7 +9,7 @@ jest.mock('next/navigation', () => ({
 
 describe('HomePage', () => {
   it('renders a heading with English locale', async () => {
-    const params = { locale: 'en-US' }
+    const params = Promise.resolve({ locale: 'en-US' })
 
     // Since HomePage is now async, we need to render it properly
     const HomePageComponent = await HomePage({ params })
@@ -23,7 +23,7 @@ describe('HomePage', () => {
   })
 
   it('renders a heading with Spanish locale', async () => {
-    const params = { locale: 'es-AR' }
+    const params = Promise.resolve({ locale: 'es-AR' })
 
     const HomePageComponent = await HomePage({ params })
 
