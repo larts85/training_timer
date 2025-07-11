@@ -1,19 +1,9 @@
-import { render } from '@testing-library/react'
+import { render, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import HomePage, { generateMetadata } from '../app/[locale]/page'
 
-// Mock the components
-jest.mock('@/components/Header/Header', () => {
-  return function MockHeader() {
-    return <div data-testid="header">Header</div>
-  }
-})
-
-jest.mock('@/components/Button/Button', () => {
-  return function MockButton() {
-    return <div data-testid="button">Button</div>
-  }
-})
+// Mock timers to avoid waiting for SplashScreen
+jest.useFakeTimers()
 
 // Mock the translations utility
 jest.mock('@/utils/translations', () => ({
@@ -24,18 +14,40 @@ jest.mock('@/utils/translations', () => ({
       greeting: 'Test Greeting',
     },
   }),
+  getStaticTranslations: jest.fn().mockReturnValue({
+    navLinks: {
+      home: 'Home',
+      anchorTitle: 'Anchor Title',
+    },
+  }),
 }))
 
 describe('HomePage', () => {
   const mockParams = Promise.resolve({ locale: 'en-US' })
 
-  it('should render header and main content', async () => {
+  beforeEach(() => {
+    jest.clearAllTimers()
+  })
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers()
+  })
+
+  it('should render header and main content after splash screen', async () => {
     const PageComponent = await HomePage({ params: mockParams })
 
-    const { getByTestId } = render(PageComponent)
+    const { getByRole } = render(PageComponent)
 
-    expect(getByTestId('header')).toBeInTheDocument()
-    expect(getByTestId('button')).toBeInTheDocument()
+    // Fast-forward through the splash screen timer
+    act(() => {
+      jest.advanceTimersByTime(2000)
+    })
+
+    await waitFor(() => {
+      expect(getByRole('banner')).toBeInTheDocument()
+    })
+
+    expect(getByRole('main')).toBeInTheDocument()
   })
 
   it('should generate metadata correctly', async () => {
