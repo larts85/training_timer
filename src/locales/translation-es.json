@@ -8,5 +8,15 @@
     "home": "Inicio",
     "contact": "Contacto",
     "anchorTitle": "Página"
+  },
+  "dashboard": {
+    "title": "Temporizador de Entrenamiento"
+  },
+  "timer": {
+    "cycles": "Ciclos"
+  },
+  "controllers": {
+    "start": "Iniciar",
+    "pause": "Pausar"
   }
 }
