@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import AppClient from '@/components/App/AppClient'
+import { Dashboard } from '@/components/Dashboard/Dashboard'
 import { getTranslations } from '@/utils/translations'
 
 type Props = {
@@ -16,9 +16,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params
-  const translations = await getTranslations(locale)
-
-  return <AppClient locale={locale} greeting={translations.home.greeting} />
+export default function HomePage() {
+  return <Dashboard />
 }
