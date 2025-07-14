@@ -4,6 +4,10 @@ import RootLayout from '../app/layout'
 
 describe('RootLayout', () => {
   it('should render without throwing', () => {
+    // Suppress hydration warnings for this test since we're testing a Next.js layout
+    // that includes html/body tags which conflicts with the test environment
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
     expect(() => {
       render(
         <RootLayout>
@@ -11,6 +15,8 @@ describe('RootLayout', () => {
         </RootLayout>,
       )
     }).not.toThrow()
+
+    consoleSpy.mockRestore()
   })
 
   it('should be a function component', () => {

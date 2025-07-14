@@ -61,7 +61,9 @@ describe('AppClient Component', () => {
   })
 
   afterEach(() => {
-    jest.runOnlyPendingTimers()
+    act(() => {
+      jest.runOnlyPendingTimers()
+    })
     jest.useRealTimers()
     jest.useFakeTimers()
   })
@@ -81,8 +83,8 @@ describe('AppClient Component', () => {
     // Initially splash is shown
     expect(screen.getByTestId('splash-screen')).toBeInTheDocument()
 
-    // Fast-forward time by 2 seconds
-    act(() => {
+    // Fast-forward time by 2 seconds and wait for state update
+    await act(async () => {
       jest.advanceTimersByTime(2000)
     })
 
