@@ -250,9 +250,11 @@ export const Dashboard: React.FC = () => {
   }
 
   const handlePrevious = () => {
-    const { currentCycle, totalCycles, phase } = timerState
+    const { currentCycle, totalCycles, phase, currentSet, totalSets } =
+      timerState
 
     let newCycle = currentCycle
+    let newSet = currentSet
 
     // Determine previous cycle (with wrap around)
     if (currentCycle > 1) {
@@ -260,12 +262,14 @@ export const Dashboard: React.FC = () => {
     } else {
       // If we're on the first cycle, go to last cycle
       newCycle = totalCycles
+      newSet = currentSet > 1 ? currentSet - 1 : totalSets
     }
 
     // Keep exactly the same relative position (set and phase)
     setTimerState((prev) => ({
       ...prev,
       currentCycle: newCycle,
+      currentSet: newSet,
       // DO NOT change set or phase during manual navigation
     }))
 
