@@ -49,13 +49,8 @@ describe('HomePage', () => {
     jest.runOnlyPendingTimers()
   })
 
-  it('renders the Training Timer Dashboard with English locale', async () => {
-    const params = Promise.resolve({ locale: 'en-US' })
-
-    // Since HomePage is now async, we need to render it properly
-    const HomePageComponent = await HomePage({ params })
-
-    render(HomePageComponent)
+  it('renders the Training Timer Dashboard', async () => {
+    render(<HomePage />)
 
     // Fast-forward through the splash screen timer
     act(() => {
@@ -75,12 +70,8 @@ describe('HomePage', () => {
     expect(screen.getByText('CYCLES')).toBeInTheDocument()
   })
 
-  it('renders the Training Timer Dashboard with Spanish locale', async () => {
-    const params = Promise.resolve({ locale: 'es-AR' })
-
-    const HomePageComponent = await HomePage({ params })
-
-    render(HomePageComponent)
+  it('renders the Training Timer Dashboard consistently', async () => {
+    render(<HomePage />)
 
     // Fast-forward through the splash screen timer
     act(() => {
