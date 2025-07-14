@@ -49,7 +49,7 @@ describe('HomePage', () => {
     jest.runOnlyPendingTimers()
   })
 
-  it('renders a heading with English locale', async () => {
+  it('renders the Training Timer Dashboard with English locale', async () => {
     const params = Promise.resolve({ locale: 'en-US' })
 
     // Since HomePage is now async, we need to render it properly
@@ -64,13 +64,18 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       const heading = screen.getByRole('heading', {
-        name: /Hello world/i,
+        name: /Training Timer/i,
       })
       expect(heading).toBeInTheDocument()
     })
+
+    // Verify Dashboard elements are present
+    expect(screen.getByText('Timer')).toBeInTheDocument()
+    expect(screen.getByText('SETS')).toBeInTheDocument()
+    expect(screen.getByText('CYCLES')).toBeInTheDocument()
   })
 
-  it('renders a heading with Spanish locale', async () => {
+  it('renders the Training Timer Dashboard with Spanish locale', async () => {
     const params = Promise.resolve({ locale: 'es-AR' })
 
     const HomePageComponent = await HomePage({ params })
@@ -84,9 +89,14 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       const heading = screen.getByRole('heading', {
-        name: /hola mundo/i,
+        name: /Training Timer/i,
       })
       expect(heading).toBeInTheDocument()
     })
+
+    // Verify Dashboard elements are present
+    expect(screen.getByText('Timer')).toBeInTheDocument()
+    expect(screen.getByText('SETS')).toBeInTheDocument()
+    expect(screen.getByText('CYCLES')).toBeInTheDocument()
   })
 })
