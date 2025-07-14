@@ -1,0 +1,222 @@
+---
+description: Comprehensive TypeScript coding standards and best practices for modern, robust, and maintainable web development.
+globs: ["**/*.ts", "**/*.tsx", "**/*.d.ts", "**/*.jsx"]
+alwaysApply: true
+---
+<!--
+Rule Version: 1.3.0
+Last Updated: 2025-01-08
+Last Updated By: AI Assistant
+Change Type: MINOR
+Description: Consolidated nordic-typescript.mdc rules into this file, removed Nordic-specific references for general project applicability
+-->
+
+# TypeScript Best Practices & Coding Standards
+
+This guide provides a comprehensive set of standards and best practices for writing clean, maintainable, and robust TypeScript code in modern web development projects.
+
+## I. Type System
+
+Leverage TypeScript's powerful type system to enhance code quality and reduce runtime errors.
+
+1.  **Prefer `interface` for Public APIs, `type` for Internal Types:**
+    * Use `interface` when defining the shape of objects or classes that are part of a public API, as they are more extendable.
+    * Use `type` for unions, intersections, mapped types, conditional types, or when defining types for internal module use.
+2.  **Embrace `unknown` over `any`:**
+    * Avoid `any` as it disables type checking.
+    * Use `unknown` for values where the type is genuinely unknown at compile time. Perform necessary type checking (e.g., type guards, instanceof) before operating on `unknown` values.
+3.  **Strict Configuration is Key:**
+    * Enable all strict mode options in your `tsconfig.json` (e.g., `strict: true` which includes `noImplicitAny`, `strictNullChecks`, `strictFunctionTypes`, `strictBindCallApply`, `strictPropertyInitialization`, `noImplicitThis`, `useUnknownInCatchVariables`). This catches many common errors at compile time.
+4.  **Leverage Utility Types:**
+    * Make effective use of TypeScript's built-in utility types (e.g., `Partial<T>`, `Readonly<T>`, `Pick<T, K>`, `Omit<T, K>`, `ReturnType<T>`) to manipulate and create new types efficiently.
+5.  **Employ Generics for Reusability:**
+    * Use generics `<T>` to create reusable components, functions, and data structures that can work with a variety of types while maintaining type safety.
+6.  **Use `readonly` for Immutability:**
+    * Mark properties as `readonly` on interfaces and classes if their values should not be changed after initialization. This helps in creating more predictable and immutable data structures.
+7.  **Discriminated Unions for State Management:**
+    * Use discriminated unions (tagged unions) with a common literal type property to model states or variants in a type-safe manner, often used with `switch` statements for exhaustive checks.
+8.  **Type Guards for Runtime Validation:**
+    * Implement custom type guards (functions returning `value is Type`) or use `typeof` and `instanceof` for runtime type checking, especially when dealing with `unknown` or data from external sources.
+9.  **Explicit Null and Undefined Handling:**
+    * With `strictNullChecks` enabled, be explicit about nullable types using union types (e.g., `string | null`). Avoid implicit `null` or `undefined` values. Use optional chaining (`?.`) and nullish coalescing (`??`) for safer access and default values.
+10. **Avoid Type Assertions Where Possible:**
+    * Use type assertions (`as Type` or `<Type>value`) sparingly and only when you are certain about the type, and TypeScript's inference is insufficient. Overuse can lead to runtime errors.
+
+## II. Naming Conventions
+
+Consistent naming improves readability and maintainability.
+
+1.  **Types (Interfaces, Classes, Enums, Type Aliases):** Use `PascalCase` (e.g., `UserProfile`, `OrderService`).
+2.  **Variables & Functions:** Use `camelCase` (e.g., `userName`, `calculateTotalPrice`).
+3.  **Constants & Enum Members:** Use `UPPER_CASE` with underscores (e.g., `MAX_USERS`, `OrderStatus.PENDING`).
+4.  **Boolean Variables:** Use descriptive prefixes like `is`, `has`, `should`, `can` (e.g., `isLoading`, `hasPermission`).
+5.  **Directories:** Use lowercase with dashes (e.g., `components/auth-wizard`).
+6.  **Generic Type Parameters:** Use concise, single uppercase letters, often starting with `T`, then `U`, `K`, `V`, etc. (e.g., `function identity<T>(arg: T): T`). For multiple or more descriptive generic parameters, use `PascalCase` (e.g., `interface Dictionary<Key, Value>`).
+
+## III. Code Organization & Modules
+
+Structure your codebase logically for better scalability and ease of navigation.
+
+1.  **Co-location of Types:**
+    * Keep type definitions close to where they are primarily used. For example, component props interfaces should be in the same file or a directly adjacent file to the component.
+2.  **Shared Types:**
+    * Place types and interfaces shared across multiple modules or features in a dedicated `types`, `interfaces`, or `models` directory, potentially organized by domain.
+3.  **Module Exports:**
+    * Use named exports primarily for clarity. Default exports can be used for the main export of a module (e.g., a component).
+    * Favor named exports for components.
+    * Utilize barrel files (`index.ts`) to group and re-export modules from a directory, simplifying import paths. Use with caution to avoid circular dependencies and large bundle sizes if not tree-shaken properly.
+4.  **File and Directory Structure:**
+    * Organize files by feature or domain rather than by type (e.g., all services in one folder, all components in another). This generally leads to better modularity.
+    * Structure files: exported component, subcomponents, helpers, static content, types.
+    * Example:
+        ```
+        src/
+        ├── components/
+        │   ├── Button/
+        │   │   ├── Button.tsx
+        │   │   └── index.ts
+        ├── features/
+        │   ├── user/
+        │   │   ├── components/
+        │   │   ├── services/
+        │   │   └── index.ts
+        ├── services/
+        ├── utils/
+        types/ (for truly global types)
+        ```
+
+## IV. Functions & Methods
+
+Write clear, predictable, and well-typed functions.
+
+1.  **Explicit Return Types:**
+    * Always specify explicit return types for public functions and methods. This improves readability and catches errors if the function's implementation deviates from the intended contract. Type inference can be used for private or internal functions where the return type is obvious.
+2.  **Arrow Functions vs. `function` Keyword:**
+    * Use arrow functions for callbacks, inline functions, and when you need to preserve the `this` context of the surrounding lexical scope (especially in classes for event handlers or methods passed as callbacks).
+    * Use the `function` keyword for top-level function declarations or when a named function expression is preferred for clarity or hoisting.
+    * Use the function keyword for pure functions.
+3.  **Function Overloads for Polymorphism:**
+    * Use function overloads to define multiple type signatures for a single function, providing better type safety and editor autocompletion for complex scenarios. The last signature should be the implementation signature using compatible (often broader) types.
+4.  **Prefer `async/await` for Asynchronous Code:**
+    * Use `async/await` for cleaner, more readable asynchronous operations compared to raw Promises and `.then()/.catch()` chains. Ensure `async` functions return `Promise<T>`.
+5.  **Parameter Destructuring with Type Annotations:**
+    * When functions accept objects as parameters, use destructuring with inline type annotations for clarity and conciseness.
+    * Example: `function Greet({ name, age }: { name: string; age: number }) { /* ... */ }`
+
+## V. Classes
+
+Structure object-oriented code effectively.
+
+1.  **Access Modifiers:**
+    * Use `public`, `private`, and `protected` access modifiers to control the visibility of class members. Default is `public`.
+2.  **Constructor Shorthand:**
+    * Use constructor shorthand for declaring and initializing class properties.
+    * Example: `class Person { constructor(public readonly name: string, private age: number) {} }`
+3.  **Readonly Members:**
+    * Use `readonly` for properties that should only be set in the constructor.
+4.  **Static Members:**
+    * Use `static` for properties or methods that belong to the class itself, not instances.
+5.  **Abstract Classes:**
+    * Use `abstract` classes and methods to define common structures that must be implemented by derived classes.
+
+## VI. Error Handling
+
+Implement robust error handling strategies.
+
+1.  **Custom Error Types:**
+    * Create custom error classes extending the built-in `Error` class for domain-specific errors. This allows for more granular error handling and identification.
+    * Example: `class NetworkError extends Error { constructor(message: string, public statusCode?: number) { super(message); this.name = 'NetworkError'; } }`
+2.  **Result Types / Either Monads (Optional):**
+    * For operations that can predictably fail (e.g., API calls, parsing), consider using a Result type (e.g., `{ success: true, data: T } | { success: false, error: E }`) or libraries providing an `Either` monad to handle success and error paths explicitly without throwing exceptions.
+3.  **Typed `catch` Clauses:**
+    * When `useUnknownInCatchVariables` is enabled (part of `strict: true`), `catch` clause variables are typed as `unknown`. Use type guards or `instanceof` to narrow down the error type before handling it.
+    * Example: `try { /* ... */ } catch (error: unknown) { if (error instanceof NetworkError) { /* ... */ } else if (error instanceof Error) { /* ... */ } else { /* handle unexpected error */ } }`
+4.  **Handle Promise Rejections:**
+    * Always handle Promise rejections, either with a `.catch()` block or within a `try/catch` block in an `async` function. Unhandled promise rejections can crash Node.js applications or lead to silent failures in browsers.
+
+## VII. Code Style & Readability
+
+Maintain a consistent and readable codebase.
+
+1.  **Linters and Formatters:**
+    * Use ESLint with TypeScript-specific plugins and Prettier for consistent code formatting and to enforce coding standards automatically.
+    * Use Prettier for consistent code formatting.
+2.  **Comments:**
+    * Write clear and concise comments to explain complex logic, assumptions, or workarounds.
+    * **All comments must be written in English** for consistency and global team collaboration.
+    * Use JSDoc comments for functions, classes, and types to provide descriptions, parameter details, and return value information, enabling better editor support.
+3.  **Avoid Magic Strings/Numbers:**
+    * Use named constants or enums instead of embedding literal values directly in code.
+4.  **Keep Functions Small and Focused:**
+    * Functions should ideally do one thing well (Single Responsibility Principle).
+    * Keep components small and focused
+5.  **Modularity:**
+    * Break down complex logic into smaller, reusable modules/functions.
+    * Prefer iteration and modularization over code duplication.
+6.  **Syntax & Formatting:**
+    * Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+    * Use declarative JSX.
+    * Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+
+## VIII. Build & Configuration
+
+Optimize your TypeScript setup.
+
+1.  **`tsconfig.json` Best Practices:**
+    * Start with `strict: true`.
+    * Enable `esModuleInterop: true` for better compatibility with CommonJS modules.
+    * Enable `forceConsistentCasingInFileNames: true` to prevent issues on case-sensitive file systems.
+    * Use `noEmit: true` for type checking only, or specify `outDir` for build output.
+2.  **Declaration Files (`.d.ts`):**
+    * Provide declaration files for JavaScript libraries that don't have built-in types or types available on DefinitelyTyped (`@types/`).
+    * Use `declaration: true` and `declarationMap: true` in `tsconfig.json` if you are building a library to emit declaration files and source maps for them.
+
+## IX. React & Component Development
+
+Guidelines specific to React development with TypeScript.
+
+### UI Components
+- Use modern, accessible UI component libraries as needed
+
+### TypeScript in React
+- Use functional components with TypeScript interfaces.
+- Prefix interfaces for React props with 'Props' (e.g., ButtonProps)
+- Use functional and declarative programming patterns; avoid classes.
+- Extract reusable logic into custom hooks
+
+### Hooks
+- Follow the Rules of Hooks
+- Use custom hooks for reusable logic
+- Keep hooks focused and simple
+- Use appropriate dependency arrays in useEffect
+- Implement cleanup in useEffect when needed
+- Avoid nested hooks
+
+### State Management
+- Use useState for local component state
+- Implement useReducer for complex state logic
+- Use Context API for shared state
+- Keep state as close to where it's used as possible
+- Avoid prop drilling through proper state management
+- Use state management libraries only when necessary
+
+### Performance
+- Implement proper memoization (useMemo, useCallback)
+- Use React.memo for expensive components
+- Avoid unnecessary re-renders
+- Implement proper lazy loading
+- Use proper key props in lists
+- Profile and optimize render performance
+
+### Testing
+- Write unit tests for components
+- Implement integration tests for complex flows
+- Use React Testing Library
+- Test user interactions
+- Test error scenarios
+- Implement proper mock data
+
+### Styling & UI
+- Ensure high accessibility (a11y) standards using ARIA roles and native accessibility props
+- Follow consistent CSS naming conventions (BEM, CSS modules, or styled-components)
+- Use semantic HTML elements for better accessibility

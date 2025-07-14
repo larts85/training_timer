@@ -1,0 +1,61 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+<!--
+Rule Version: 1.0.0
+Last Updated: 2025-06-02
+Last Updated By: AI Assistant
+Change Type: MINOR
+Description: General development instructions and conventions for the fury_flows-canvas codebase
+-->
+
+# General Instructions for the fury_flows-canvas Codebase
+
+## Structure and General Conventions
+
+- The project is organized primarily under the `/app` folder, following a modular structure by business domain (e.g., `modules/workflow`, `modules/genericComponents`, `modules/andesComponents`, etc).
+- Folder and file names should be descriptive and follow the convention of using snake_case for special internal classification folders (e.g., `_commonForms`).
+- Files and folders should inherit the name of the main feature to maintain coherence and traceability.
+- Type files should have the `.types.ts` extension and helper files `.helpers.ts`.
+- Unit tests should be in `.spec.ts` or `.spec.tsx` files next to the file they test.
+
+## Migrations and Code Standards
+
+- Whenever possible, migrate files from CommonJS to ESM (ECMAScript Modules).
+- Migrate files from JavaScript to TypeScript progressively. Prioritize migration of new or edited files.
+- Maintain compatibility with the TypeScript typing system and leverage global types defined in `/types`.
+- When editing or creating a file, update or create corresponding unit tests. If a file is created from scratch, its associated unit test file should also be created, following naming and location conventions.
+- Snapshot tests should not be created.
+
+## Development Best Practices
+
+- Modularize components and separate reusable logic into custom hooks or utils files.
+- Reuse existing components and types whenever possible.
+- Document new actions, components, or services following the pattern of specific instruction files.
+- Avoid code and component duplication. Consult documentation and instruction files for each domain before creating something new.
+- Follow integration recommendations and structure from `README.md` files and specific instructions for each module.
+
+## Testing
+
+- The project uses Jest for unit and integration tests. Tests should cover business requirements and the main function of the component.
+- Extensive mocks should be modularized in `mocks.ts` files to maintain test readability.
+- Tests should run and pass correctly before committing.
+
+## Considerations for Copilot Chat
+
+- All file editing or creation should consider these general instructions and domain-specific instructions.
+- If the edited or created file has logic, it should have its corresponding unit test.
+- If the edited file is in CommonJS, prioritize its migration to ESM.
+- If the edited file is in JavaScript, prioritize its migration to TypeScript.
+- Migrations should be incremental and not break existing functionality.
+
+## References
+
+- Always review specific instruction files in `.github/instructions/` and `README.md` files for each module before making changes.
+- Consult the detailed structure and conventions in `/app/README.md`.
+
+---
+
+All instructions specified within the files in this folder should be taken as context and considered for edits requested in Copilot Chat

@@ -1,0 +1,275 @@
+---
+description: Comprehensive Node.js and Express.js development standards and best practices for modern web development
+globs: ["**/*.js", "**/*.ts", "api/**/*", "services/**/*", "controllers/**/*", "routes/**/*"]
+alwaysApply: false
+---
+<!--
+Rule Version: 1.0.0
+Last Updated: 2025-06-02
+Last Updated By: AI Assistant
+Change Type: MINOR
+Description: Comprehensive Node.js and Express.js development standards and best practices
+-->
+
+# Node.js and Express.js Development Standards
+
+## I. Project Structure and Organization
+
+### Directory Layout
+- **Core Application Structure**
+```
+api
+ ┣ constants
+ ┃ ┣ constantsExample.ts
+ ┃ ┣ constantsExample.types.ts
+ ┣ services
+ ┃ ┣ serviceExample
+ ┃ ┃ ┣ serviceExample.controllers.spec.ts
+ ┃ ┃ ┣ serviceExample.controllers.ts
+ ┃ ┃ ┣ serviceExample.routes.spec.ts
+ ┃ ┃ ┣ serviceExample.routes.ts
+ ┃ ┃ ┣ serviceExample.services.spec.ts
+ ┃ ┃ ┗ serviceExample.services.ts
+ ┣ utils
+ ┃ ┣ utilsExample
+ ┃ ┃ ┣ utilsExample.js
+ ┃ ┃ ┣ utilsExample.spec.js
+ ┃ ┣ index.js
+ ┣ README.md
+ ┗ index.ts
+```
+
+### File Naming Conventions
+- Use camelCase for files (e.g., `circuitBreaker.ts`, `permisions.ts`)
+- Group related functionality by API version (e.g., `v1`, `v2`, `v3` directories)
+- Use descriptive, domain-specific names that indicate purpose
+- Use `index.ts` files as "barrels" to export from directories
+
+## II. Coding Standards
+
+### TypeScript Usage
+- Define explicit interfaces for all API requests and responses
+- Use TypeBox or similar schema validation libraries for runtime type checking
+- Define error types as classes extending a base error class
+
+## III. Error Handling
+
+### Standardized Error Response Format
+```typescript
+{
+  error: string; // Error type
+  message: string; // Human-readable error message
+  statusCode: number; // HTTP status code
+}
+```
+
+### Error Hierarchy
+- Base class: `ApiError` with common error handling methods
+- Specific error types:
+  - `EntityError`: For business logic/data validation errors (422)
+  - `DependencyError`: For dependency service failures (424)
+  - `BadRequestError`: For invalid client requests (400)
+  - `ConnectionError`: For network/connectivity issues (503)
+  - `UnhandledError`: For unexpected errors (500)
+
+### Centralized Error Handling
+- Use Express error middleware for consistent error handling
+- Each error type should have standardized handling logic
+- Include logging, metrics, and proper client response
+- Integrate with monitoring tools (NewRelic, StatsD)
+
+### Asynchronous Error Handling
+- Wrap all asynchronous controller methods in try/catch blocks
+- Use decorators to automate error handling in controllers
+- Forward errors to Express error middleware via `next(error)`
+- Implement circuit breakers for external service calls
+
+## IV. Asynchronous Programming
+
+### Promise Usage
+- Use `async/await` syntax for asynchronous operations
+- Avoid callback patterns and Promise chaining where possible
+- Implement proper error handling with try/catch blocks
+- Use Promise.allSettled for concurrent operations
+
+### Circuit Breaker Pattern
+- Implement circuit breakers for external service calls
+- Configure timeouts, fallbacks, and retry strategies in `/config`
+- Track circuit breaker metrics for monitoring
+- Handle degraded service gracefully
+
+## V. API Design
+
+### RESTful Principles
+- Organize endpoints around resources
+- Use proper HTTP methods (GET, POST, PUT, DELETE)
+- Return appropriate HTTP status codes
+- Include detailed error messages in responses
+
+### Versioning Strategy
+- Use URL path versioning (e.g., `/v1/users`, `/v2/users`)
+- Organize controllers, routes, and schemas by version
+- Maintain backward compatibility for existing clients when possible
+
+### Request/Response Structure
+- Define clear TypeScript interfaces for all requests/responses
+- Use schema validation for request payloads
+- Return consistent response structures across endpoints
+- Include status codes and error details when appropriate
+
+### Status Codes
+- 200: Successful responses
+- 204: No content responses
+- 400: Bad request errors
+- 401: Unauthorized errors
+- 403: Forbidden errors
+- 404: Not found errors
+- 422: Unprocessable entity errors
+- 424: Failed dependency errors
+- 500: Server errors
+- 503: Service unavailable errors
+
+## VI. Security Best Practices
+
+### Input Validation
+- Validate all request parameters, query strings, and bodies
+- Use schema validation libraries (TypeBox, Ajv)
+- Implement middleware for common validation tasks
+- Sanitize input to prevent injection attacks
+
+### Authentication and Authorization
+- Implement middleware for validating permissions
+- Verify client applications via headers (x-client-id)
+
+### Protecting Sensitive Data
+- Never log sensitive information
+- Use fury secrets for secrets and credentials
+- Implement proper error handling to avoid leaking system details
+- Use HTTPS for all API communications
+
+## VII. Middleware Usage
+
+### Common Middleware
+- Error handling middleware for centralized error processing
+- Validation middleware for request parameter checking
+- Internationalization middleware for multi-language support
+
+### Middleware Order
+1. Request logging/tracing
+2. Error handling setup
+3. Request parsing (body, query parameters)
+4. Authentication/authorization
+5. Request validation
+6. Route handlers
+7. Error middleware (end of pipeline)
+
+### Custom Middleware Creation
+- Focus each middleware on a single responsibility
+- Pass errors to the next middleware using `next(error)`
+- Use TypeScript interfaces for request/response augmentation
+
+## VIII. Dependency Management
+
+### Package Management
+- Use npm as the package manager
+- Maintain a locked dependency file (`package-lock.json`)
+- Specify exact versions for critical dependencies
+- Set Node.js version requirements in `engines` field
+
+## IX. Testing
+
+### Testing Framework
+- Use Jest for unit and integration testing
+- Follow the test directory structure mirroring src
+- Configure coverage reports with minimal thresholds
+
+### Test Types
+- Unit tests for individual functions and methods
+- Integration tests for API endpoints
+- Mocking external dependencies for isolated testing
+- Test covering error cases and edge conditions
+
+### Test Coverage
+- Track code coverage with Jest's coverage reporter
+- Maintain high coverage percentages for critical code paths
+
+## X. Logging and Monitoring
+
+### Logging
+- Use structured logging with frontend-logger for machine-readable output
+- Include contextual information (user IDs, request IDs, site codes)
+- Log appropriate levels (info, warn, error) based on severity
+- Avoid logging sensitive data (PII, credentials)
+- Example:
+  ```javascript
+  const { LoggerFactory } = require('frontend-logger');
+  const log = LoggerFactory('myapp');
+  log.info('Log a custom message.', { site: 'MLA' });
+  ```
+
+### Metrics and Monitoring
+- Use trackMetrics decorator in controllers
+- Use frontend-statsd for collecting performance metrics
+- Implement proper tagging for metrics (e.g., `{ logged: user.logged, referrer: 'vip' }`)
+- Track response times, error rates, and business-critical operations
+- Example:
+  ```javascript
+  const { statsd } = require('frontend-statsd');
+  const sampleRate = 1;
+  const statName = 'renderSomething.duration';
+  const tags = { logged: user.logged, referrer: 'vip' };
+  statsd.gauge(statName, value, sampleRate, tags);
+  ```
+
+## XI. Environment Configuration
+
+### Configuration Management
+- Use frontend-config for configuration management across environments
+- Support different environments (development, testing, production)
+- Example:
+  ```javascript
+  import { config } from 'frontend-config';
+  const serverHost = config.get('server.host', 'ML', 'MLA');
+  ```
+
+## XII. Internationalization (i18n)
+
+### Server-Side i18n
+- Use @meli/i18n for internationalization
+- Configure i18n middleware in Express routes
+- Set up translation files by language code
+- Example:
+  ```javascript
+  const { i18nMiddleware } = require('@meli/i18n');
+  const config = require('frontend-config');
+  router.use(i18nMiddleware(config.i18n));
+  ```
+
+## XIII. Controller Design Pattern
+
+### Controller Class Structure
+- Use Controller decorator
+- Implement consistent method signatures
+- Focus controllers on request handling, not business logic
+- Delegate to services and entities for business rules
+
+### Controller Responsibilities
+- Parse and validate request data
+- Call appropriate services/entities
+- Transform data for response
+- Handle errors appropriately
+- Return consistent response structures
+
+## XIV. Service Layer
+
+### Service Responsibilities
+- Implement business logic independent of HTTP context
+- Handle external API communications
+- Implement caching strategies when appropriate
+- Use circuit breakers for fault tolerance
+
+### Service Design
+- Use dependency injection for testability
+- Implement retry and timeout strategies from frontend-config
+- Return domain objects, not HTTP responses
+- Handle and transform errors from external systems

@@ -1,0 +1,391 @@
+<!--
+Rule Version: 3.0.0
+Last Updated: 2025-01-08
+Last Updated By: AI Assistant
+Change Type: MAJOR
+Description: Updated for Dyarthi project with critical branch preservation rules, Spanish content context, and complete test workflow integration
+-->
+
+# Git Workflow Guidelines for Dyarthi Project
+
+## CRITICAL BRANCH PRESERVATION RULE ⚠️
+
+**NEVER DELETE BRANCHES - UNDER ANY CIRCUMSTANCES**
+
+- ❌ **NEVER use `--delete-branch` flag in any git command**
+- ❌ **NEVER use `gh pr merge --delete-branch`**
+- ❌ **NEVER manually delete branches after merging**
+- ✅ **Always preserve all branches for history and reference**
+- ✅ **Use `gh pr merge --squash` WITHOUT delete flag**
+- ✅ **Keep all feature, release, and hotfix branches permanently**
+
+**Rationale**: Branches contain valuable development history, debugging context, and may need to be referenced for future development or troubleshooting.
+
+## Project Context: Dyarthi - 3D Modeling & Printing Business
+
+### Business Information
+
+- **Location**: Ciudad Autónoma de Buenos Aires, Argentina
+- **Phone Format**: +54 11 (Argentina format)
+- **Currency**: Argentine pesos
+- **Content Language**: Spanish
+- **Business Type**: Family business, 3D modeling and printing services
+- **Target Market**: Argentina territory
+
+### Content Characteristics
+
+- All website content is in Spanish
+- Family business messaging (simplified, not corporate)
+- Focus on 3D printing and modeling services
+- Argentina-specific contact information and shipping
+- Legal pages: Política de Privacidad, Términos y Condiciones, Política de Cookies
+
+## Branch Management Rules
+
+### Branch Creation Rules
+
+- If you want to create a hotfix, move to the main branch with `git checkout main`
+- If you don't want to create a hotfix, move to the develop branch with `git checkout develop`
+- Fetch the latest changes with `git pull`
+- You can only create new branches with `git checkout -b` and branches must start with `feature/`, `fix/`, `release/` or `hotfix/` as specified
+
+### Branch Naming Conventions
+
+**For Feature/Fix Branches:**
+
+- Format: `feature/description` or `fix/description`
+- Examples:
+  - `feature/spanish-content-updates`
+  - `fix/contact-form-validation`
+  - `feature/legal-pages-creation`
+
+**For Release/Hotfix Branches:**
+
+- Format: `release/YYYY-MM-DD` or `hotfix/YYYY-MM-DD`
+- Examples:
+  - `release/2025-01-08`
+  - `hotfix/2025-01-08`
+
+### GitFlow Pattern
+
+- **develop** → **main**: Release flow
+- **feature/** → **develop**: Feature development
+- **hotfix/** → **main**: Emergency fixes
+- **release/** → **main**: Production releases
+
+## Test Integration Workflow
+
+### Test Requirements
+
+Before any commit or PR creation:
+
+- ✅ All tests must pass: `npm test`
+- ✅ Fix any failing tests related to Spanish content
+- ✅ Update test assertions to match actual page content
+- ✅ Ensure test files match component structure (.tsx components need .spec.tsx tests)
+
+### Common Test Issues in Dyarthi
+
+- **About page**: Tests should expect "Una Empresa Familiar con Visión de Futuro" not just "Nosotros"
+- **Contact page**: Tests should expect "Contacta con Nosotros" not just "Contacto"
+- **Navigation tests**: Mock usePathname properly from next/navigation
+- **Footer tests**: Handle comprehensive footer structure with social media icons
+
+### Test File Standards
+
+- Use `renderWithProvider` from `tests/utils` for components
+- Use `renderHookWithProvider` for custom hooks
+- Properly type all test props and mocks
+- Test Spanish content accurately
+- Cover user interactions and edge cases
+
+## 'Push Up' Command Workflow
+
+When the user writes **'push up'**, execute this complete workflow:
+
+### CRITICAL: Dependency Management Rules
+
+**Before ANY commit operation:**
+
+1. **Never Commit Broken Dependencies**:
+
+   - ALWAYS commit all related files together that have dependencies
+   - NEVER commit a file that imports from another uncommitted file
+   - Verify all imported modules/types are included in the same commit
+
+2. **Complete File Management**:
+   - **Exception list** - These files should NEVER be committed:
+     - `app/constants/config.ts` (contains development ports)
+     - `config/default.js` (contains development ports)
+   - **All other modified files MUST be committed before any push**
+
+### 1. Test Verification (CRITICAL FIRST STEP)
+
+```bash
+# ALWAYS run tests first - no exceptions
+npm test
+
+# If tests fail:
+# 1. Fix failing tests immediately
+# 2. Update test content to match Spanish website content
+# 3. Ensure all test files are properly typed (.spec.tsx for .tsx components)
+# 4. Re-run tests until all pass
+# 5. Only proceed when tests are green
+```
+
+### 2. Initial Setup and Verification
+
+```bash
+# 1. Check current status
+git status
+
+# 2. Verify current branch
+git branch --show-current
+
+# 3. Verify dependencies for ALL staged files
+# For each file to be committed, check imports and ensure dependencies are included
+
+# 4. Create branch if needed (NEVER delete existing branches)
+git checkout -b feature/[branch-name]  # Only if branch doesn't exist
+```
+
+### 3. Spanish Content Commit Strategy
+
+**For Dyarthi project, organize commits by content type:**
+
+**A. Content Updates (Spanish)**
+
+```bash
+# Spanish content and legal pages
+git add app/about/page.tsx app/contact/page.tsx app/privacy-policy/ app/terms-conditions/ app/cookies/
+git commit -m "feat: update Spanish content and legal pages
+- Enhanced About page with family business messaging
+- Updated Contact page with Argentina contact information
+- Added legal pages: Política de Privacidad, Términos y Condiciones, Política de Cookies
+- Implemented Argentina-specific phone numbers (+54 11) and location"
+```
+
+**B. Component and UI Updates**
+
+```bash
+# UI components and styling
+git add app/components/ app/globals.css
+git commit -m "feat: enhance UI components and styling
+- Updated Footer with realistic social media icons
+- Enhanced header navigation and responsive design
+- Improved component accessibility and user experience"
+```
+
+**C. Test Updates**
+
+```bash
+# Test files and test utilities
+git add app/**/*.spec.tsx tests/
+git commit -m "test: update tests for Spanish content and improved coverage
+- Fixed About page tests to match current Spanish content
+- Updated Contact page tests for 'Contacta con Nosotros' title
+- Enhanced Navigation tests with proper usePathname mocking
+- Improved Footer tests for comprehensive structure"
+```
+
+### 4. Pre-Push Verification
+
+```bash
+# Verify tests still pass after all commits
+npm test
+
+# Verify ONLY exceptions remain uncommitted
+git status  # Should only show config.ts files as modified
+
+# If other files remain, they MUST be committed
+git add .
+git reset app/constants/config.ts config/default.js  # Remove exceptions
+git commit -m "chore: commit remaining files for complete functionality"
+```
+
+### 5. Branch Push (NEVER DELETE)
+
+```bash
+# Push branch - NEVER use delete flags
+git push -u origin [branch-name]
+```
+
+### 6. PR Creation Rules
+
+**CRITICAL: Use proper merge commands**
+
+```bash
+# ✅ CORRECT: Merge without deleting branch
+gh pr merge [PR-NUMBER] --squash
+
+# ❌ WRONG: Never use delete-branch flag
+gh pr merge [PR-NUMBER] --squash --delete-branch  # NEVER DO THIS
+```
+
+## Release Workflow
+
+### Release Branch Creation
+
+```bash
+# Create release branch from develop
+git checkout develop
+git pull origin develop
+git checkout -b release/YYYY-MM-DD
+```
+
+### Release to Main
+
+```bash
+# Create PR to main
+gh pr create --base main --title "Release vYYYY.MM.DD - [Description]" --body "[Release notes]"
+
+# Merge to main (PRESERVE BRANCH)
+gh pr merge [PR-NUMBER] --squash
+# Note: Branch is preserved for future reference
+```
+
+## Project-Specific Considerations
+
+### Spanish Content Guidelines
+
+- All user-facing content must be in Spanish
+- Phone numbers in Argentina format: +54 11
+- Currency references in Argentine pesos
+- Location references to Buenos Aires, Argentina
+- Family business tone (warm, personal, not corporate)
+
+### Legal Pages Requirements
+
+- Política de Privacidad (Privacy Policy)
+- Términos y Condiciones (Terms and Conditions)
+- Política de Cookies (Cookie Policy)
+- All in Spanish, appropriate for Argentina jurisdiction
+
+### Test Content Alignment
+
+- Test assertions must match actual Spanish content
+- About page: "Una Empresa Familiar con Visión de Futuro"
+- Contact page: "Contacta con Nosotros"
+- Footer: Comprehensive structure with social media
+- Navigation: Proper Spanish menu items
+
+### External Links Configuration
+
+- All external links must have `target="_blank"` and `rel="noopener noreferrer"`
+- WhatsApp links for Argentina phone numbers
+- Social media links with realistic SVG icons
+- Email and phone links properly formatted
+
+## Commit Message Conventions
+
+### Spanish Project Context
+
+- **feat:** New feature implementation (e.g., "feat: add Spanish legal pages")
+- **fix:** Bug fixes (e.g., "fix: Argentina phone number format")
+- **test:** Adding or updating tests (e.g., "test: update Spanish content assertions")
+- **content:** Content updates (e.g., "content: enhance family business messaging")
+- **ui:** UI/UX improvements (e.g., "ui: improve footer social media icons")
+- **docs:** Documentation updates
+- **chore:** Maintenance tasks
+
+### Examples for Dyarthi
+
+```bash
+git commit -m "feat: implement Spanish legal pages for Argentina compliance"
+git commit -m "fix: update contact information to Buenos Aires format"
+git commit -m "test: align test assertions with Spanish website content"
+git commit -m "content: enhance about page with family business values"
+git commit -m "ui: add realistic social media icons to footer"
+```
+
+## Pull Request Guidelines
+
+### For Regular PRs (feature/, fix/)
+
+- **Always follow the `.github/pull_request_template.md`**
+- **Title format:** `[type]: [description-in-spanish]`
+  - Examples:
+    - `feat: páginas legales en español`
+    - `fix: información de contacto Argentina`
+    - `test: contenido español en pruebas`
+
+### For Release PRs (release/)
+
+- **Title format:** `Release vYYYY.MM.DD - [Description]`
+- **Must include comprehensive testing of Spanish content**
+- **Verify all Argentina-specific information is correct**
+
+## Branch Preservation Policy
+
+### Why We Never Delete Branches
+
+1. **Development History**: Branches contain valuable development context
+2. **Debugging Reference**: May need to reference implementation details
+3. **Feature Evolution**: Track how features evolved over time
+4. **Rollback Capability**: Ability to reference previous implementations
+5. **Team Knowledge**: Preserve developer decision-making context
+
+### Branch Management Best Practices
+
+- Keep all branches permanently
+- Use descriptive branch names for easy identification
+- Document significant branches in commit messages
+- Use git tags for major releases while preserving release branches
+- Regular cleanup of local branches only (never remote)
+
+## Pre-PR Checklist for Dyarthi
+
+Before creating any PR, ensure:
+
+- [ ] ✅ All tests pass (`npm test`)
+- [ ] ✅ Spanish content is accurate and properly formatted
+- [ ] ✅ Argentina-specific information is correct (phone, location, currency)
+- [ ] ✅ External links have proper target="\_blank" attributes
+- [ ] ✅ Legal pages are in Spanish and appropriate for Argentina
+- [ ] ✅ Test assertions match actual Spanish page content
+- [ ] ✅ No development configuration files committed
+- [ ] ✅ All TypeScript files properly typed
+- [ ] ✅ Family business tone maintained throughout content
+
+## Workflow Summary for Dyarthi
+
+1. **Run tests first** - Always verify tests pass before any git operations
+2. **Create branch** following naming conventions (NEVER delete later)
+3. **Make changes** following Spanish content and Argentina business context
+4. **Update tests** to match Spanish content accurately
+5. **Test thoroughly** until all tests pass
+6. **Commit organized** by content type (Spanish content, UI, tests)
+7. **Create PR** using appropriate template with Spanish descriptions
+8. **Merge preserving branch** - NEVER use delete-branch flags
+9. **Verify deployment** works with Spanish content and Argentina information
+
+## Emergency Procedures
+
+### If Branch Was Accidentally Deleted
+
+1. Check if branch exists in remote: `git branch -r`
+2. If remote exists: `git checkout -b [branch-name] origin/[branch-name]`
+3. If completely deleted: Check git reflog for recovery
+4. Document incident and ensure team awareness of no-delete policy
+
+### If Tests Fail During Release
+
+1. **STOP release process immediately**
+2. Fix failing tests on feature branch
+3. Update test content to match Spanish website
+4. Verify all Spanish content tests pass
+5. Only proceed with release when tests are green
+
+### Critical Branch Protection
+
+- Configure GitHub branch protection rules
+- Require status checks (tests) before merge
+- Prevent direct deletion of branches
+- Require PR reviews for main/develop branches
+
+This updated workflow ensures the Dyarthi project maintains its Spanish content integrity, Argentina business context, comprehensive test coverage, and most importantly, preserves all development history by never deleting branches.
+
+- Maintain core rules consistent across all **allowed repositories only**
+- Allow repository-specific customizations in separate rule files
+- Use naming convention: `[repo-name]-specific.mdc` for repository-unique rules
+- Document cross-repository rule dependencies and relationships within the allowed repository group

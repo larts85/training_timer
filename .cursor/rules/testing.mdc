@@ -1,0 +1,573 @@
+---
+description: Comprehensive testing guidelines and best practices for unit tests, integration tests, and test coverage
+globs:
+alwaysApply: true
+---
+<!--
+Rule Version: 1.0.0
+Last Updated: 2025-01-08
+Last Updated By: AI Assistant
+Change Type: MAJOR
+Description: Extracted comprehensive testing guidelines from main rules file into dedicated testing documentation
+-->
+
+# Testing Guidelines and Best Practices
+
+This document provides comprehensive guidelines for writing, organizing, and maintaining tests in the project, with a focus on unit tests, integration tests, and test coverage.
+
+## Core Testing Principles
+
+### Write Self-Documenting Tests
+- Test titles should accurately reflect what is being verified
+- Tests should check the actual behavior described in the title, not just basic rendering
+- Write meaningful test descriptions instead of commenting test steps
+- Comment when the behavior being tested is not immediately obvious from the test name
+
+### Test Real User Scenarios
+- Verify user interactions and component states comprehensively
+- Test both success and error scenarios
+- Include meaningful assertions about component state
+- Test error conditions and edge cases
+- Validate integration between components
+
+## Testing Framework and Setup
+
+### Use Project Test Utilities
+
+**For Component Tests:**
+- Always use `renderWithProvider` from `tests/utils` instead of manual render setup
+- This provides the necessary Redux store, SnackbarProvider, and ReactFlowProvider context
+- **When using `renderWithProvider` with components that have typed props, always use the component's prop types**
+- Study the overloads in `tests/utils.tsx` to understand how to properly pass typed props
+
+```typescript
+// ✅ Good: Use renderWithProvider with proper typing
+import ComponentName, { type ComponentNameProps } from './ComponentName'
+
+const mockProps: ComponentNameProps = {
+  // properly typed props
+}
+
+const render = (props: ComponentNameProps) => renderWithProvider(ComponentName, props, store)
+
+// ❌ Avoid: Using renderWithProvider without proper typing
+renderWithProvider(ComponentName, props) // props not typed
+```
+
+**For Hook Tests:**
+- Always use `renderHookWithProvider` from `tests/utils` instead of manual renderHook setup
+- Use `renderCurrent: true` when you need direct access to hook return values
+- Use the standard return when you need access to rerender and other utilities
+
+```typescript
+// ✅ Good: Use renderHookWithProvider for direct access
+const { cecos, isLoadingCecos } = renderHookWithProvider(useMyHook, {
+  params: ['param1', 'param2'],
+  renderCurrent: true,
+})
+
+// ✅ Good: Use renderHookWithProvider for full control
+const result = renderHookWithProvider(useMyHook, {
+  params: ['param1', 'param2'],
+})
+
+expect(result.result.current.data).toEqual(expectedData)
+result.rerender()
+
+// ❌ Avoid: Manual renderHook setup
+const { result } = renderHook(() => useMyHook('param1', 'param2'), {
+  wrapper: ({ children }) => (
+    <Provider store={store}>
+      {children}
+    </Provider>
+  ),
+})
+```
+
+## Test Content Quality Guidelines
+
+### Write Realistic and Specific Tests
+
+Tests should verify actual behavior, not just code execution:
+
+```typescript
+// ❌ Poor: Test doesn't match title
+it('should handle empty CECO list', () => {
+  renderWithProvider(Component, props)
+  expect(screen.getByRole('button')).toBeInTheDocument()
+})
+
+// ✅ Good: Test matches title and verifies empty state behavior
+it('should handle empty CECO list with empty message', async () => {
+  mockUseCecos.mockReturnValue({
+    cecos: [],
+    isLoadingCecos: false,
+  })
+
+  renderWithProvider(Component, props)
+
+  const selector = await checkSelectorAsync('CECO Selector (required)')
+  expect(selector).not.toBeDisabled()
+
+  // Click to open dropdown and verify empty message is shown
+  if (selector) {
+    fireEvent.click(selector)
+  }
+
+  await waitFor(() => {
+    expect(screen.getByText('Nothing found')).toBeInTheDocument()
+  })
+
+  // Verify there's only one option (the empty message)
+  const options = screen.getAllByRole('option')
+  expect(options).toHaveLength(1)
+
+  // The empty message option should be disabled
+  const emptyOption = screen.getByText('Nothing found')
+  const emptyOptionElement = emptyOption.closest('[role="option"]')
+  if (emptyOptionElement) {
+    expect(emptyOptionElement).toHaveClass('andes-list__item--disabled')
+  }
+})
+```
+
+### Test User Interactions
+
+- Verify that user actions (clicks, selections, inputs) work as expected
+- Check that the correct functions are called with the right parameters
+- Use `checkSelectorAsync` for consistent selector verification
+
+```typescript
+// ✅ Good: Test user interaction and function calls
+it('should call setFormFieldsData when provided and option is selected', async () => {
+  const mockSetFormFieldsData = jest.fn()
+
+  renderWithProvider(Component, { ...props, setFormFieldsData: mockSetFormFieldsData })
+
+  const selector = await checkSelectorAsync('CECO Selector (required)')
+  if (selector) {
+    fireEvent.click(selector)
+  }
+
+  await waitFor(() => {
+    expect(screen.getByText('CECO001')).toBeInTheDocument()
+  })
+
+  const firstOption = screen.getByText('CECO001')
+  fireEvent.click(firstOption)
+
+  expect(mockSetFormFieldsData).toHaveBeenCalledWith({
+    nodeType: 'WHATSAPP',
+    nodeId: 'test-id',
+    fields: [...],
+    values: { ceco_id: 'CECO001', ... },
+  })
+})
+```
+
+### Test Different Component States
+
+Always test these scenarios to achieve comprehensive coverage:
+
+**Component State Variations:**
+- Loading states with appropriate loading text/indicators
+- Empty states with proper empty messages
+- Error states with error handling
+- Disabled states with correct disabled behavior
+- Single vs multiple options scenarios
+
+```typescript
+// ✅ Good: Test loading state with loading text
+it('should show loading state with loading text', async () => {
+  mockUseCecos.mockReturnValue({
+    isLoadingCecos: true,
+    cecos: [],
+  })
+
+  renderWithProvider(Component, props)
+
+  // Verify loading helper text is displayed
+  expect(screen.getByText('Loading CECO Selector')).toBeInTheDocument()
+
+  const selector = await checkSelectorAsync('CECO Selector (required)')
+  if (selector) {
+    fireEvent.click(selector)
+  }
+
+  await waitFor(() => {
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
+  })
+
+  // Verify there's only one option (the loading message)
+  const options = screen.getAllByRole('option')
+  expect(options).toHaveLength(1)
+
+  // The loading option should be disabled
+  const loadingOption = screen.getByText('Loading...')
+  const loadingOptionElement = loadingOption.closest('[role="option"]')
+  if (loadingOptionElement) {
+    expect(loadingOptionElement).toHaveClass('andes-list__item--disabled')
+  }
+})
+```
+
+### Test Alternative Code Paths
+
+- Test both `setFormFieldsData` and `handleReduxStateBulkChange` paths
+- Verify that only the expected function is called in each scenario
+- Test input validation and error handling
+
+```typescript
+// ✅ Good: Test alternative code paths
+it('should call handleReduxStateBulkChange when setFormFieldsData is not provided', async () => {
+  const propsWithoutSetFormFieldsData = {
+    ...defaultProps,
+    setFormFieldsData: undefined,
+  }
+
+  renderWithProvider(Component, propsWithoutSetFormFieldsData)
+
+  const selector = await checkSelectorAsync('CECO Selector (required)')
+  if (selector) {
+    fireEvent.click(selector)
+  }
+
+  await waitFor(() => {
+    expect(screen.getByText('CECO002')).toBeInTheDocument()
+  })
+
+  const secondOption = screen.getByText('CECO002')
+  fireEvent.click(secondOption)
+
+  expect(mockHandleReduxStateBulkChange).toHaveBeenCalledWith(
+    mockDispatch,
+    'WHATSAPP',
+    { ceco_id: 'CECO002', ... },
+    'test-id'
+  )
+
+  // Verify setFormFieldsData was NOT called
+  expect(mockSetFormFieldsData).not.toHaveBeenCalled()
+})
+```
+
+### Verify Exact Counts and Content
+
+- When testing lists, verify the exact number of items
+- Check that specific options are present or absent
+- Verify CSS classes and component states
+- Use proper null checks for DOM elements
+
+```typescript
+// ✅ Good: Verify exact counts and specific content
+it('should handle single CECO option correctly', async () => {
+  const singleCeco = [{ id: 1, ceco_id: 'CECO001', name: 'CECO 001' }]
+
+  mockUseCecos.mockReturnValue({
+    cecos: singleCeco,
+    isLoadingCecos: false,
+  })
+
+  renderWithProvider(Component, props)
+
+  const selector = await checkSelectorAsync('CECO Selector (required)')
+  if (selector) {
+    fireEvent.click(selector)
+  }
+
+  await waitFor(() => {
+    expect(screen.getByText('CECO001')).toBeInTheDocument()
+  })
+
+  // Verify there's exactly one option
+  const options = screen.getAllByRole('option')
+  expect(options).toHaveLength(1)
+  const optionElement = options[0].closest('[role="option"]')
+  if (optionElement) {
+    expect(optionElement).not.toHaveClass('andes-list__item--disabled')
+  }
+
+  // Verify no other CECOs are present
+  expect(screen.queryByText('CECO002')).not.toBeInTheDocument()
+  expect(screen.queryByText('CECO003')).not.toBeInTheDocument()
+})
+```
+
+### Use Project Test Utilities
+
+- Always use `checkSelectorAsync` for selector verification instead of manual `screen.getByRole`
+- Use `setAndCheckSelectorAsync` for complex selector interactions when appropriate
+- Add proper null checks when using DOM methods like `closest()`
+- Follow the established patterns in the project's test utilities
+
+```typescript
+// ✅ Good: Use project utilities with proper null checks
+const selector = await checkSelectorAsync('CECO Selector (required)')
+if (selector) {
+  fireEvent.click(selector)
+}
+
+// ✅ Good: Proper null check for DOM elements
+const emptyOption = screen.getByText('Nothing found')
+const emptyOptionElement = emptyOption.closest('[role="option"]')
+if (emptyOptionElement) {
+  expect(emptyOptionElement).toHaveClass('andes-list__item--disabled')
+}
+```
+
+## Mock Setup Best Practices
+
+### Use Modern Import Mocking
+- Use proper ES6 import mocking instead of require statements
+- Use `jest.mocked()` for type-safe mocks when needed
+
+```typescript
+// ✅ Good: Proper import mocking
+import useMyHook from '../hooks/useMyHook'
+
+jest.mock('../hooks/useMyHook')
+
+const mockUseMyHook = useMyHook as jest.Mock
+
+// ❌ Avoid: require statements in mocks
+const mockUseMyHook = jest.mocked(require('../hooks/useMyHook').default)
+```
+
+### Mock Organization
+- Extensive mocks should be modularized in `mocks.ts` files to maintain test readability
+- Keep mock definitions close to where they're used when possible
+- Use proper TypeScript types for mock return values
+
+## Test Coverage Guidelines
+
+### Coverage Standards
+- **Target 100% coverage** for new components and significant changes
+- **Minimum 95% coverage** for statements, branches, functions, and lines
+- **No uncovered code** should remain without justification
+
+### Coverage Analysis Process
+When working on components or making changes:
+
+1. **Run coverage analysis** after initial test implementation
+2. **Identify uncovered lines** systematically using coverage reports
+3. **Create targeted tests** for each uncovered code path
+4. **Document any intentionally uncovered code** with comments explaining why
+
+### Edge Case Testing Strategy
+
+**User Interaction Patterns:**
+- First-time interactions
+- Repeated interactions
+- Invalid inputs
+- Boundary conditions
+- Rapid successive actions
+
+**Code Path Coverage:**
+- Early returns in functions
+- Conditional logic branches
+- Default cases in switch statements
+- Error handling paths
+- Cleanup operations
+
+**Function Parameter Variations:**
+- Required vs optional parameters
+- Different parameter combinations
+- Edge values (null, undefined, empty strings)
+- Type validation paths
+
+### Coverage Improvement Techniques
+
+**For React Components:**
+```typescript
+// Test all conditional rendering paths
+it('should handle component when data is null', () => {
+  renderWithProvider(Component, { ...props, data: null })
+  expect(screen.getByText('No data available')).toBeInTheDocument()
+})
+
+it('should handle component when data exists', () => {
+  renderWithProvider(Component, { ...props, data: mockData })
+  expect(screen.getByText('Data loaded')).toBeInTheDocument()
+})
+```
+
+**For Function Logic:**
+```typescript
+// Test early returns and all branches
+it('should return early when invalid input provided', () => {
+  const result = processData(null)
+  expect(result).toBeNull()
+})
+
+it('should process data when valid input provided', () => {
+  const result = processData(validData)
+  expect(result).toEqual(expectedResult)
+})
+```
+
+**For useEffect and Event Handlers:**
+```typescript
+// Test cleanup and different scenarios
+it('should call cleanup when component unmounts', () => {
+  const { unmount } = renderWithProvider(Component, props)
+  unmount()
+  expect(mockCleanup).toHaveBeenCalled()
+})
+
+it('should handle event when condition A is true', () => {
+  renderWithProvider(Component, { ...props, conditionA: true })
+  fireEvent.click(screen.getByRole('button'))
+  expect(mockHandlerA).toHaveBeenCalled()
+})
+
+it('should handle event when condition A is false', () => {
+  renderWithProvider(Component, { ...props, conditionA: false })
+  fireEvent.click(screen.getByRole('button'))
+  expect(mockHandlerB).toHaveBeenCalled()
+})
+```
+
+### Coverage Analysis Workflow
+
+1. **Initial Implementation**: Write basic tests for main functionality
+2. **Run Coverage**: Execute `npm run test:coverage` for the specific file
+3. **Analyze Report**: Identify uncovered lines, branches, and functions
+4. **Create Targeted Tests**: Write specific tests for each uncovered path
+5. **Verify Improvement**: Re-run coverage to confirm improvements
+6. **Document Remaining Gaps**: Explain any intentionally uncovered code
+
+### Coverage Quality Standards
+
+**High-Quality Coverage Tests Should:**
+- Test real user scenarios, not just code execution
+- Verify actual behavior, not just that code runs
+- Include meaningful assertions about component state
+- Test error conditions and edge cases
+- Validate integration between components
+
+**Avoid These Coverage Anti-Patterns:**
+- Tests that only exercise code without assertions
+- Shallow tests that don't verify behavior
+- Over-mocking that eliminates real logic testing
+- Tests written solely to increase coverage percentage
+
+## Running Tests
+
+### Test Execution Best Practices
+- **For specific test files**: Use the direct file path: `npm test path/to/file.spec.tsx`
+- **Avoid using test pattern flags**: Both `--testPathPattern` and `--testNamePattern` can be unreliable and cause unexpected behavior
+- **For running multiple related tests**: Execute each test file individually rather than using pattern matching
+
+### Examples:
+```bash
+# ✅ Correct: Run specific file
+npm test app/components/MyComponent.spec.tsx
+
+# ✅ Correct: Run multiple specific files
+npm test app/components/MyComponent.spec.tsx app/components/AnotherComponent.spec.tsx
+
+# ❌ Avoid: Using pattern flags (unreliable)
+npm test --testPathPattern=MyComponent
+npm test --testNamePattern="should handle loading"
+```
+
+## TypeScript Migration and Testing
+
+### Test File Migration
+- **When migrating components to TypeScript (.tsx), also migrate their test files**
+- **Test files should use `.spec.ts` extension for pure logic tests or `.spec.tsx` for tests that render JSX components**
+- **Update test files to use proper TypeScript types for props, mocks, and assertions**
+- **Remove any JavaScript-specific patterns and add proper type annotations**
+
+### TypeScript Testing Best Practices
+- Export component props types for better reusability in tests: `export interface ComponentNameProps`
+- Use proper TypeScript interfaces for all mocks, especially hook return types
+- Update mocks to match TypeScript interfaces (e.g., `CecoItem` with required `id` property)
+- Remove unused imports and variables
+
+## Testing Comments Guidelines
+
+### When Comments ARE Valuable in Tests:
+
+**Test Context and Complex Scenarios:**
+```typescript
+// ✅ Good: Explains test context when behavior is not obvious
+// Initially loading should be true during fetch
+await waitFor(() => {
+  expect(result.current.isLoadingCecos).toBe(true)
+})
+
+// ✅ Good: Explains test setup for complex scenarios
+// Change the subtype in defaultData to trigger refetch
+mockUseDefaultData.mockReturnValue({
+  subtype: 'cta',
+})
+```
+
+### Avoid Unnecessary Comments in Tests:
+
+```typescript
+// ❌ Avoid these obvious comments
+// Mock the dependencies
+jest.mock('../../../hooks/useRequest')
+jest.mock('../../../hooks/useDefaultData')
+
+// Mock functions
+const mockSetFormFieldsData = jest.fn()
+const mockDispatch = jest.fn()
+
+// Test data
+const mockCecos = [...]
+
+// Setup mocks
+beforeEach(() => {
+  mockUseDefaultData.mockReturnValue(mockDefaultData)
+})
+
+// Clear mocks
+afterEach(() => {
+  jest.clearAllMocks()
+})
+```
+
+## Test Organization and Structure
+
+### File Organization
+- Test files should be named with `.spec.ts` or `.spec.tsx` extensions
+- Keep test files close to the files they test
+- Use descriptive `describe` blocks to group related tests
+- Use clear and specific test names that describe the expected behavior
+
+### Test Structure
+- Follow the Arrange-Act-Assert pattern
+- Set up test data and mocks in `beforeEach` when shared across tests
+- Clean up mocks in `afterEach` to prevent test interference
+- Use proper async/await patterns for asynchronous operations
+
+## Integration Testing
+
+### Component Integration
+- Test components in realistic contexts with proper providers
+- Verify component interactions and data flow
+- Test error boundaries and fallback behaviors
+- Validate accessibility and user experience
+
+### Hook Integration
+- Test hooks with realistic state changes
+- Verify hook dependencies and cleanup
+- Test hook error handling and edge cases
+- Validate hook performance and optimization
+
+<important>
+**Critical Testing Principles:**
+- **Use project test utilities (renderWithProvider, renderHookWithProvider) consistently with proper typing**
+- **Test comments are valuable when they explain complex test scenarios or non-obvious behavior**
+- **Avoid suggesting linter runs during development iterations - handle at commit time**
+- **Always export component prop types for better reusability and testing**
+- **Target 100% coverage for new components and significant changes**
+- **Write tests that verify actual behavior, not just code execution**
+</important>
+description:
+globs:
+alwaysApply: false
+---

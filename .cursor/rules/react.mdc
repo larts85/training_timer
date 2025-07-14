@@ -1,0 +1,538 @@
+---
+description: React best practices and patterns for modern web applications
+globs: **/*.tsx, **/*.jsx, components/**/*, nordic-pages/**/*, hooks/**/*, hocs/**/*, styles/**/*
+alwaysApply: true
+---
+<!--
+Rule Version: 1.0.0
+Last Updated: 2025-06-02
+Last Updated By: AI Assistant
+Change Type: MINOR
+Description: Comprehensive React development guidelines and best practices for modern web applications
+-->
+
+# React Guidelines
+
+This guide outlines the best practices for using React in this Nordic frontend project. Following these practices will ensure maintainable, performant, and reliable React code.
+
+## Hooks
+
+### Follow the Rules of Hooks
+- Only call hooks at the top level of your function components or custom hooks
+- Don't call hooks inside loops, conditions, or nested functions
+- Ensures hooks are called in the same order on every render
+
+```jsx
+// ❌ Don't do this
+function Component() {
+  const [data, setData] = useState(null);
+
+  if (data) {
+    // This breaks the rules of hooks
+    const [loading, setLoading] = useState(false);
+  }
+}
+
+// ✅ Do this instead
+function Component() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Use conditional logic here instead
+  if (data) {
+    // ...
+  }
+}
+```
+
+### Use Custom Hooks for Reusable Logic
+
+Create custom hooks to extract component logic into reusable functions:
+
+```jsx
+// ✅ Custom hook for data fetching
+function useDataFetching(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(url);
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+// Usage in a component
+function MyComponent() {
+  const { data, loading, error } = useDataFetching('/api/data');
+  // ...
+}
+```
+
+### Keep Hooks Focused and Simple
+
+Each hook should have a single responsibility:
+
+```jsx
+// ❌ Don't do this - hook doing too much
+function useEverything() {
+  const [user, setUser] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
+
+  // Fetching user data
+  useEffect(() => { /* ... */ }, []);
+
+  // Fetching products
+  useEffect(() => { /* ... */ }, []);
+
+  // Cart operations
+  const addToCart = () => { /* ... */ };
+  const removeFromCart = () => { /* ... */ };
+
+  return { user, products, cart, addToCart, removeFromCart };
+}
+
+// ✅ Do this instead - separate hooks for different concerns
+function useUser() { /* ... */ }
+function useProducts() { /* ... */ }
+function useCart() { /* ... */ }
+```
+
+### Use Appropriate Dependency Arrays in useEffect
+
+Always specify the correct dependencies in useEffect:
+
+```jsx
+// ❌ Don't do this - missing dependency
+function Component({ id }) {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetchData(id).then(setData);
+  }, []); // Missing 'id' dependency
+
+  // ...
+}
+
+// ✅ Do this instead - proper dependency array
+function Component({ id }) {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetchData(id).then(setData);
+  }, [id]); // Correctly listing 'id' as a dependency
+
+  // ...
+}
+```
+
+### Implement Cleanup in useEffect When Needed
+
+Always implement cleanup for subscriptions, timers, and event listeners:
+
+```jsx
+// ✅ Proper cleanup in useEffect
+useEffect(() => {
+  const subscription = someObservable.subscribe();
+
+  // Return cleanup function
+  return () => {
+    subscription.unsubscribe();
+  };
+}, [someObservable]);
+
+// ✅ Cleanup for event listeners
+useEffect(() => {
+  const handleResize = () => {
+    // Handle resize
+  };
+
+  window.addEventListener('resize', handleResize);
+
+  return () => {
+    window.removeEventListener('resize', handleResize);
+  };
+}, []);
+```
+
+### Avoid Nested Hooks
+
+Don't create hooks inside other hooks:
+
+```jsx
+// ❌ Don't do this
+function useOuterHook() {
+  const [value, setValue] = useState(0);
+
+  // This is a nested hook - avoid this
+  function useInnerHook() {
+    const [innerValue, setInnerValue] = useState(0);
+    return innerValue;
+  }
+
+  // ...
+}
+
+// ✅ Do this instead - separate hooks
+function useInnerHook() {
+  const [innerValue, setInnerValue] = useState(0);
+  return innerValue;
+}
+
+function useOuterHook() {
+  const [value, setValue] = useState(0);
+  // Call useInnerHook here if needed
+  // ...
+}
+```
+
+## State Management
+
+### Use useState for Local Component State
+
+For simple component state, use useState:
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+### Implement useReducer for Complex State Logic
+
+When state logic becomes complex or involves multiple sub-values:
+
+```jsx
+// ✅ useReducer for complex state
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    case 'reset':
+      return { count: 0 };
+    default:
+      throw new Error();
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, { count: 0 });
+
+  return (
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+      <button onClick={() => dispatch({ type: 'reset' })}>Reset</button>
+    </div>
+  );
+}
+```
+
+### Use Context API for Shared State
+
+For state shared across components, use Context API:
+
+```jsx
+// ✅ Context for shared state
+const ThemeContext = createContext();
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+function ThemedButton() {
+  const { theme, toggleTheme } = useContext(ThemeContext);
+
+  return (
+    <button
+      onClick={toggleTheme}
+      style={{ background: theme === 'light' ? '#fff' : '#333' }}
+    >
+      Toggle Theme
+    </button>
+  );
+}
+```
+
+### Keep State as Close to Where It's Used as Possible
+
+Lift state only as high as necessary:
+
+```jsx
+// ❌ Don't do this - state too high in the tree
+function App() {
+  const [inputValue, setInputValue] = useState('');
+
+  return (
+    <div>
+      <Header />
+      <MainContent>
+        <SearchForm inputValue={inputValue} setInputValue={setInputValue} />
+      </MainContent>
+      <Footer />
+    </div>
+  );
+}
+
+// ✅ Do this instead - state close to where it's used
+function App() {
+  return (
+    <div>
+      <Header />
+      <MainContent>
+        <SearchForm />
+      </MainContent>
+      <Footer />
+    </div>
+  );
+}
+
+function SearchForm() {
+  const [inputValue, setInputValue] = useState('');
+  // ...
+}
+```
+
+### Avoid Prop Drilling Through Proper State Management
+
+Use context or composition to avoid passing props through many layers:
+
+```jsx
+// ❌ Prop drilling
+function App() {
+  const [user, setUser] = useState(null);
+
+  return (
+    <div>
+      <Header user={user} />
+      <MainContent user={user} />
+      <Footer user={user} />
+    </div>
+  );
+}
+
+function MainContent({ user }) {
+  return (
+    <div>
+      <Sidebar user={user} />
+      <Content user={user} />
+    </div>
+  );
+}
+
+// ✅ Using Context instead
+const UserContext = createContext();
+
+function App() {
+  const [user, setUser] = useState(null);
+
+  return (
+    <UserContext.Provider value={user}>
+      <div>
+        <Header />
+        <MainContent />
+        <Footer />
+      </div>
+    </UserContext.Provider>
+  );
+}
+
+function UserProfile() {
+  const user = useContext(UserContext);
+  // Now can access user directly without props
+}
+```
+
+### Use State Management Libraries Only When Necessary
+
+Prefer React's built-in state management and only avoid external libraries:
+
+- Use useState and useReducer for component state
+- Use Context API for application-wide state
+
+## Performance
+
+### Implement Proper Memoization
+
+Use useMemo for expensive calculations and useCallback for functions passed to child components:
+
+```jsx
+// ✅ useMemo for expensive calculations
+function FilteredList({ items, filter }) {
+  const filteredItems = useMemo(() => {
+    console.log('Computing filtered items');
+    return items.filter(item => item.includes(filter));
+  }, [items, filter]);
+
+  return (
+    <ul>
+      {filteredItems.map(item => <li key={item}>{item}</li>)}
+    </ul>
+  );
+}
+
+// ✅ useCallback for stable function references
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = useCallback(() => {
+    console.log('Button clicked');
+  }, []); // No dependencies means this function never changes
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <ChildComponent onClick={handleClick} />
+    </div>
+  );
+}
+```
+
+### Use React.memo for Expensive Components
+
+Wrap components with React.memo to prevent unnecessary re-renders:
+
+```jsx
+// ✅ Using React.memo for component memoization
+const ExpensiveComponent = React.memo(function ExpensiveComponent({ value }) {
+  console.log('Rendering expensive component');
+
+  // Complex rendering logic here
+  return <div>{value}</div>;
+});
+
+function Parent() {
+  const [count, setCount] = useState(0);
+  const [value] = useState('constant value');
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <ExpensiveComponent value={value} />
+    </div>
+  );
+}
+```
+
+### Avoid Unnecessary Re-renders
+
+Prevent unnecessary re-renders by:
+- Using proper memoization
+- Keeping state localized
+- Avoiding new object/function creation in render
+
+```jsx
+// ❌ Don't do this - creates new object on every render
+function BadComponent() {
+  return (
+    <ChildComponent options={{ color: 'red' }} />
+  );
+}
+
+// ✅ Do this instead - memoize the object
+function GoodComponent() {
+  const options = useMemo(() => ({ color: 'red' }), []);
+
+  return (
+    <ChildComponent options={options} />
+  );
+}
+```
+
+### Implement Proper Lazy Loading
+
+Use React.lazy and Suspense for code splitting:
+
+```jsx
+// ✅ Lazy loading components
+const LazyComponent = React.lazy(() => import('./LazyComponent'));
+
+function MyComponent() {
+  return (
+    <div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <LazyComponent />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+### Use Proper Key Props in Lists
+
+Always use stable, unique keys for list items:
+
+```jsx
+// ❌ Don't do this - using index as key
+function BadList({ items }) {
+  return (
+    <ul>
+      {items.map((item, index) => (
+        <li key={index}>{item.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// ✅ Do this instead - using unique ID as key
+function GoodList({ items }) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Profile and Optimize Render Performance
+
+Use tools to identify and fix performance issues:
+- React DevTools Profiler
+- Performance tab in browser DevTools
+- React's profiling build
+
+Performance optimization checklist:
+- Memoize expensive calculations and components
+- Split large components into smaller ones
+- Implement virtualization for long lists (react-window)
+- Batch state updates that happen together
+- Use lazy loading for components not needed immediately
