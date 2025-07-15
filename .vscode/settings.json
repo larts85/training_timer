@@ -1,0 +1,20 @@
+{
+  "jest.jestCommandLine": "npx jest",
+  "jest.rootPath": ".",
+  "jest.runMode": "on-demand",
+  "testing.automaticallyOpenPeekView": "never",
+  "jest.nodeEnv": {
+    "NODE_ENV": "test"
+  },
+  "cSpell.language": "en,es",
+  "cSpell.enabledFileTypes": {
+    "typescript": true,
+    "javascript": true,
+    "typescriptreact": true,
+    "javascriptreact": true,
+    "markdown": true,
+    "json": true
+  },
+  "cSpell.dictionaries": ["spanish", "typescript", "node"],
+  "cSpell.allowCompoundWords": true
+}

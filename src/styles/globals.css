@@ -1,6 +1,8 @@
-@import 'tailwindcss/utilities';
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './dashboard.css';
 
 @layer components {
   .btn-primary {

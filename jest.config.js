@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
@@ -10,7 +10,7 @@ const createJestConfig = nextJest({
 /** @type {import('jest').Config} */
 const customJestConfig = {
   // Add more setup options before each test is run
-  // setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // if using TypeScript with a baseUrl set to the root directory then you need the below for alias' to work
   moduleDirectories: ['node_modules', '<rootDir>/'],
 
@@ -41,6 +41,13 @@ const customJestConfig = {
     '!<rootDir>/src/**/*.d.ts',
     '!<rootDir>/src/types/*.ts',
     '!<rootDir>/src/styles/*.ts',
+    // Exclude configuration files
+    '!<rootDir>/src/utils/config.ts',
+    '!<rootDir>/src/locales/resources.ts',
+    // Exclude middleware due to Next.js testing complexity
+    '!<rootDir>/src/middleware.ts',
+    // Exclude Guards due to testing complexity with mocks
+    '!<rootDir>/src/components/Guards/*.tsx',
   ],
   coveragePathIgnorePatterns: [
     '<rootDir>/jest.*',
@@ -48,6 +55,12 @@ const customJestConfig = {
     '<rootDir>/node_modules/',
     '<rootDir>/.github',
     '<rootDir>/.next',
+    '<rootDir>/temp-repo/',
+  ],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/temp-repo/',
   ],
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['lcov', 'html', 'json', 'text', 'text-summary'],

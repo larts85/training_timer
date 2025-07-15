@@ -1,0 +1,524 @@
+---
+description: Code quality and style guidelines for the Flows project
+globs:
+alwaysApply: true
+---
+<!--
+Rule Version: 1.4.0
+Last Updated: 2025-01-08
+Last Updated By: AI Assistant
+Change Type: MAJOR
+Description: Extracted all testing guidelines to dedicated testing.mdc file for better organization and maintainability
+-->
+
+# Regla numero 1
+- Don't be condescending. Don't assume my corrections or suggestions are correct without first analyzing them. After doing so, if you think I'm wrong or that there's a better way, explain it to me with arguments.
+
+## Code Comments Guidelines
+
+### Avoid Unnecessary Comments
+- Don't write obvious comments that can be easily inferred from reading the code
+- Focus on explaining **why** something is done, not **what** is being done
+
+### Examples of Unnecessary Comments to Avoid:
+
+**In Tests:**
+```typescript
+// ❌ Avoid these obvious comments
+// Mock the dependencies
+jest.mock('../../../hooks/useRequest')
+jest.mock('../../../hooks/useDefaultData')
+
+// Mock functions
+const mockSetFormFieldsData = jest.fn()
+const mockDispatch = jest.fn()
+
+// Test data
+const mockCecos = [...]
+
+// Setup mocks
+beforeEach(() => {
+  mockUseDefaultData.mockReturnValue(mockDefaultData)
+})
+
+// Clear mocks
+afterEach(() => {
+  jest.clearAllMocks()
+})
+```
+
+**In Components:**
+```typescript
+// ❌ Avoid these obvious comments
+// Import React hooks
+import { useState, useEffect } from 'react'
+
+// Component props interface
+interface ComponentProps {
+  id: string
+}
+
+// Component definition
+const MyComponent = (props: ComponentProps) => {
+  // Destructure props
+  const { id } = props
+
+  // State declaration
+  const [loading, setLoading] = useState(false)
+
+  // Handle click function
+  const handleClick = () => {
+    // Set loading to true
+    setLoading(true)
+  }
+}
+```
+
+### When Comments ARE Valuable:
+
+**Business Logic Explanations:**
+```typescript
+// ✅ Good: Explains WHY, not WHAT
+// Using null instead of empty string to ensure proper clearing behavior with nullish coalescing operator (??)
+// This prevents the CECO selector from showing stale values when subtype changes
+ceco_id: null,
+
+// ✅ Good: Explains complex business rule
+// Input validation: ensure we receive a valid string
+// This handles edge cases where ListSelector might pass unexpected data types
+if (typeof selectedCecoId !== 'string') {
+  console.warn('Invalid CECO ID provided to handleCecoSelectionChange:', selectedCecoId)
+  return
+}
+```
+
+**Complex Algorithm Explanations:**
+```typescript
+// ✅ Good: Explains non-obvious logic
+// Use nullish coalescing (??) to properly handle empty strings as valid values
+// This ensures the selector clears when form data is explicitly set to empty string
+const currentSelectedValue = form?.[fieldName] ?? defaultFormData[fieldName]
+```
+
+**Workarounds or Temporary Solutions:**
+```typescript
+// ✅ Good: Explains temporary workaround
+// TODO: Remove this workaround once ListSelector supports generic types
+// Currently ListSelector is not generic, so we extend the base interface
+interface CecoItem extends ListSelectorItemBase {
+  id: number
+  ceco_id: string
+}
+```
+
+**Test Context and Complex Scenarios:**
+```typescript
+// ✅ Good: Explains test context when behavior is not obvious
+// Initially loading should be true during fetch
+await waitFor(() => {
+  expect(result.current.isLoadingCecos).toBe(true)
+})
+
+// ✅ Good: Explains test setup for complex scenarios
+// Change the subtype in defaultData to trigger refetch
+mockUseDefaultData.mockReturnValue({
+  subtype: 'cta',
+})
+```
+
+## Testing Guidelines
+
+**All testing guidelines have been moved to a dedicated file for better organization.**
+
+For comprehensive testing guidelines, best practices, and examples, please refer to:
+- **[Testing Guidelines](./testing.mdc)** - Complete documentation for unit tests, integration tests, coverage standards, and project-specific testing patterns
+
+## Development Workflow Guidelines
+
+### TypeScript Migration
+- **When migrating components to TypeScript (.tsx), also migrate their test files**
+- **Follow the comprehensive testing guidelines** outlined in the [Testing Guidelines](./testing.mdc) document
+- **Remove any JavaScript-specific patterns and add proper type annotations**
+
+### Redux to Zustand Migration Process
+When migrating components from Redux to Zustand, follow this comprehensive process:
+
+**1. Identify Target Components:**
+- Only migrate components using `handleReduxStateBulkChange`, `handleComponentStateChange`, or `handleReduxStateChange`
+- Verify component actually uses these functions before starting migration
+
+**2. Component Migration Steps:**
+- Replace `handleReduxStateBulkChange` with direct `setFormFieldsData` calls
+- Replace `useDefaultData(id, component)` with `formsData[component]?.[id] || {}` using `useStore()`
+- Remove Redux-related props: `dispatch`, `setFormFieldsData`
+- Add `useStore()` import for direct Zustand store access
+
+**3. Parent-Child Component Updates:**
+- **Always check parent components** that call the migrated component
+- Remove unused Redux props from parent component calls
+- **Check child components** if they received props that are now removed
+- Update all component call sites to match new prop interface
+
+**4. TypeScript Migration (Required):**
+- Migrate component: `.js` → `.tsx` with proper TypeScript interfaces
+- Migrate test files: `.spec.js` → `.spec.tsx` with typed mocks and props
+- Export component props types for reusability: `export interface ComponentNameProps`
+- Add proper types for all mocks, especially hook return types
+
+**5. Test Updates:**
+- Follow the comprehensive testing guidelines in [Testing Guidelines](./testing.mdc)
+- Update mocks to match TypeScript interfaces
+- Remove unused imports and variables
+- Ensure all tests pass with appropriate coverage
+
+**6. Data Access Pattern:**
+- **Old:** `useDefaultData(id, component)` + Redux dispatch
+- **New:** `formsData[component]?.[id] || {}` + direct `setFormFieldsData` calls
+- Focus on `components` → `formsData` migration pattern
+
+**7. Direct setFormFieldsData Pattern:**
+Use this pattern for all state updates:
+```typescript
+setFormFieldsData({
+  nodeType: component,
+  nodeId: id,
+  fields: [
+    {
+      id: fieldName,
+      name: fieldName,
+      type: FormFieldType.text,
+      isRequired: false,
+    },
+  ],
+  values: { [fieldName]: value },
+})
+```
+
+**8. Validation Checklist:**
+- [ ] Component uses target Redux functions
+- [ ] `useDefaultData` replaced with direct store access
+- [ ] Redux props removed from component and parent calls
+- [ ] Component migrated to `.tsx` with proper types
+- [ ] Tests migrated to `.spec.tsx` with proper typing
+- [ ] All tests passing
+- [ ] No unused imports or variables
+- [ ] Props interfaces exported for reusability
+- [ ] Uses direct `setFormFieldsData` calls instead of adapter functions
+
+**Migration Principles:**
+- Never migrate read-only components (they don't use target functions)
+- Always migrate both component and tests to TypeScript together
+- Maintain test coverage and functionality
+- Update parent components to remove unused props
+- Use direct `setFormFieldsData` calls for better performance and clarity
+- Document any intentionally uncovered code paths
+
+### Linting and Code Quality
+- **Do not suggest running linter commands during chat iterations**
+- Linting should be handled at commit time through git hooks or CI/CD
+- Focus on writing correct code rather than constantly checking linter output
+- Address linter issues when they appear in the editor or during the commit process
+
+### Code Review Process
+- Prioritize functional correctness over style issues during development
+- Use automated tools (prettier, eslint) to handle formatting and style
+- Focus manual review on business logic, architecture, and test coverage
+
+
+
+## General Guidelines
+
+- **Write self-documenting code** with clear variable and function names
+- **Use TypeScript types** to document expected data structures
+- **Comment complex business rules** that aren't obvious from the code
+- **Explain WHY decisions were made**, especially for non-standard approaches
+- **For testing practices**, refer to the comprehensive [Testing Guidelines](./testing.mdc) document
+
+## Rule Updates and Corrections
+
+When receiving corrections or feedback in chat conversations:
+- **Always update the corresponding rule file** to prevent the same issue in the future
+- **Add new rules or modify existing ones** based on the feedback received
+- **Document the context** of why the rule was added or changed
+- **Apply the updated rules** to current and future code
+
+<important>
+- Clean, readable code should minimize the need for comments
+- When in doubt, improve the code clarity instead of adding comments
+- Comments should add value that cannot be expressed through code structure
+- **Always update rules when receiving corrections to prevent future issues**
+- **Avoid suggesting linter runs during development iterations - handle at commit time**
+- **ListSelector options should prioritize user readability in names while using code conventions for IDs**
+- **Always export component prop types for better reusability and testing**
+- **For comprehensive testing guidelines, refer to the dedicated [Testing Guidelines](./testing.mdc) document**
+</important>
+
+## ListSelector Component Guidelines
+
+### Option Structure Best Practices
+When creating options for ListSelector components, follow these conventions:
+
+**ID vs Name Convention:**
+- **ID**: Use `SNAKE_CASE` for programmatic identification (e.g., `NEVER`, `MONTH`)
+- **Name**: Use human-readable text for user display (e.g., `"NOT APPLY"`, `"Monthly Restart"`)
+
+```typescript
+// ✅ Good: Proper ID and Name structure
+const restartOptions = [
+  { id: 'NEVER', name: 'NOT APPLY' },
+  { id: 'MONTHLY', name: 'MONTHLY' },
+  { id: 'WEEKLY_RESTART', name: 'Weekly Restart' },
+]
+
+// ❌ Avoid: Using code-style names for user display
+const restartOptions = [
+  { id: 'NEVER', name: 'not_apply' }, // Hard to read for users
+  { id: 'MONTHLY', name: 'monthly_option' }, // Not user-friendly
+]
+```
+
+**User Experience Guidelines:**
+- Names should be immediately understandable by end users
+- Avoid technical jargon or code conventions in user-facing text
+- Use proper capitalization and spacing for readability
+- Only use code-style formatting (snake_case, kebab-case) for IDs or in specific technical contexts
+
+## Component Props and TypeScript Guidelines
+
+### Export Component Props Types
+Always export the props interface/type from components for better reusability in tests and other components:
+
+```typescript
+// ✅ Good: Export props type
+export interface ComponentNameProps {
+  prop1: string
+  prop2: number
+}
+
+export default function ComponentName(props: ComponentNameProps) {
+  // component implementation
+}
+
+// Alternative with type alias
+export type ComponentNameProps = {
+  prop1: string
+  prop2: number
+}
+```
+
+### Use Proper Type Assertions When Needed
+When mock data doesn't perfectly match TypeScript interfaces but contains the necessary properties for testing:
+
+```typescript
+// ✅ Good: Use type assertion when mock data is sufficient for testing
+const mockProps: ComponentProps = {
+  data: {
+    ...mockData,
+    additionalProp: 'value',
+  } as ExpectedType,
+}
+
+// ✅ Better: Ensure mock data matches the expected type structure
+const mockProps: ComponentProps = {
+  data: {
+    ...mockData,
+    // Add all required properties
+    requiredProp1: 'value1',
+    requiredProp2: 'value2',
+  },
+}
+```
+
+
+
+## Rule Management Guidelines
+
+### Always Review Existing Rules Before Editing
+
+**Before adding or modifying any rule content:**
+
+1. **Read ALL existing rule files** in the `.cursor/rules/` directory
+2. **Check for duplicate or conflicting guidance** across files
+3. **Verify consistency** with established patterns and decisions
+4. **Identify any contradictions** that need resolution
+
+### Rule Review Process
+
+**When requested to add/edit rules:**
+
+1. **Survey all rule files first:**
+   ```bash
+   # Check what rule files exist
+   ls -la .cursor/rules/
+   ```
+
+2. **Read existing content** to understand current standards
+3. **Identify the appropriate file** for the new content
+4. **Check for overlaps** with existing rules
+5. **Ensure consistency** with project patterns
+
+**Rule files to always check:**
+- `flows-rules.mdc` - Project-specific patterns
+- `andes.mdc` - UI component guidelines
+- `react.mdc` - React best practices
+- `general.mdc` - General development standards
+- Any other `.mdc` files in the rules directory
+
+### Rule Consistency Requirements
+
+**New rules must:**
+- Align with existing coding standards
+- Not contradict established patterns
+- Build upon existing guidelines
+- Reference related existing rules when relevant
+
+**Rule updates should:**
+- Maintain backward compatibility when possible
+- Update version numbers and change logs
+- Cross-reference related rule changes
+- Provide migration guidance if breaking changes
+
+### Documentation Standards for Rules
+
+**Each rule addition should include:**
+- Clear rationale for why the rule exists
+- Examples of correct and incorrect usage
+- Integration with existing project patterns
+- Version information and change tracking
+
+**Rule modifications should:**
+- Document what changed and why
+- Update the rule version number
+- Include change type (MAJOR/MINOR/PATCH)
+- Reference the conversation or context that triggered the change
+
+<important>
+**Critical Rule Management Principles:**
+- **Never add rules without first reviewing all existing rules**
+- **Always check for conflicts or duplications before editing**
+- **Maintain consistency across all rule files**
+- **Document the context and reasoning for rule changes**
+- **Update version information when making changes**
+- **Cross-reference related rules and patterns**
+</important>
+
+### 2. Complete Commit Strategy (Updated)
+
+**CRITICAL: Dependency Analysis Before Any Commit**
+
+Before organizing commits, perform comprehensive dependency analysis:
+
+1. **Analyze Import Dependencies**:
+   ```bash
+   # For each modified file, check what it imports and what imports it
+   # Ensure all related files are committed together to avoid broken imports
+   ```
+
+2. **Classify Changes by Impact and Type**:
+   - **Global Configuration**: Types, constants, utilities that affect multiple components
+   - **Action Types**: Group by specific workflow action (e.g., Debt, Email, Credit)
+   - **Supporting Infrastructure**: Test utilities, helpers, shared components
+   - **Individual Components**: Standalone components with no cross-dependencies
+
+3. **Verify Import Integrity**:
+   - Never commit a file that imports from an uncommitted file
+   - Check both direct and indirect dependencies
+   - Ensure TypeScript compilation will succeed after each commit
+
+**Organized Commit Strategy by Classification:**
+
+**A. Global Configuration and Types** (if applicable)
+```bash
+# Commit shared types, constants, and global utilities first
+git add app/modules/workflow/constants/* app/modules/workflow/store/zustand/chartSlice/* app/modules/workflow/workflowComponents/ChartComponents/Group/helpers.ts
+git commit -m "feat: update global types and configuration for Zustand migration
+- Enhanced chartSlice types and utilities
+- Updated workflow constants and entities
+- Added TypeScript return type annotations
+- Prepared infrastructure for component migrations"
+```
+
+**B. Action-Specific Commits** (Group by workflow action type)
+```bash
+# Economics/Debt Action - Complete migration
+git add app/modules/workflow/actions/Economics/Debt/**/*
+git commit -m "feat: migrate Economics/Debt action to Zustand and TypeScript
+- Converted all Debt sidebar components from JS to TSX
+- Implemented direct setFormFieldsData calls replacing Redux
+- Added debt.types.ts with comprehensive type definitions
+- Updated useDebt hook for Zustand integration
+- Enhanced test coverage with proper TypeScript patterns"
+
+# Email Action - Specific improvements
+git add app/modules/workflow/actions/Notifications/Email/**/*
+git commit -m "feat: enhance Email action with improved context variables
+- Updated EmailContextVariables to use Zustand store
+- Added comprehensive test coverage with user interaction scenarios
+- Improved TypeScript interfaces and prop exports
+- Enhanced form field handling and validation"
+
+# Credit Action - Zustand migration
+git add app/modules/workflow/actions/Credit/**/*
+git commit -m "feat: migrate Credit action components to Zustand
+- Updated Credit sidebar components to use direct store access
+- Enhanced TypeScript interfaces and test coverage
+- Removed Redux dependencies from Credit workflows"
+```
+
+**C. Conversational Actions** (if applicable)
+```bash
+# ConversationalSimpleMessage Action
+git add app/modules/workflow/actions/ConversationalSimpleMessage/**/*
+git commit -m "feat: migrate ConversationalSimpleMessage to TypeScript and Zustand
+- Converted component from JS to TSX with proper typing
+- Updated tests to use TypeScript patterns
+- Enhanced component integration with Zustand store"
+
+# Other Conversational Templates
+git add app/modules/workflow/actions/ConversationalTemplates/**/*
+git commit -m "feat: update ConversationalTemplates for Zustand compatibility
+- Enhanced WhatsappMessage and InteractiveTemplate components
+- Updated prop interfaces and removed Redux dependencies"
+```
+
+**D. Supporting Infrastructure** (Test utilities, shared components)
+```bash
+git add tests/utils.tsx app/modules/workflow/components/chart-components/**/*
+git commit -m "chore: update test utilities and chart components
+- Enhanced renderWithProvider with better TypeScript support
+- Updated Chart components for improved type safety
+- Fixed drag and drop handlers with proper typing"
+```
+
+**E. Data Origin and Common Forms** (if applicable)
+```bash
+git add app/modules/workflow/actions/_DataOrigin/**/*
+git commit -m "feat: update DataOrigin common forms for Zustand integration
+- Enhanced EntryControl types and interfaces
+- Updated common form patterns for new state management"
+```
+
+**Dependency Verification Checklist for Each Commit:**
+Before each commit, verify:
+1. **Import Analysis**: All imported files are either already committed OR included in current commit
+2. **Export Verification**: No component exports types/functions that aren't committed
+3. **Compilation Check**: Changes should compile without TypeScript errors
+4. **Test Dependencies**: Test files and their target components are committed together
+5. **Cross-Action Dependencies**: If an action depends on another, commit dependencies first
+
+**Action-Type Classification Guidelines:**
+- **Economics Actions**: Debt, Credit, Payment-related components
+- **Conversational Actions**: WhatsApp, Email, SMS, Chat-related components
+- **Notification Actions**: Email, Push, Alert-related components
+- **Data Actions**: DataOrigin, Variable, Context-related components
+- **Control Actions**: Conditional, Loop, Decision-related components
+
+**Example Dependency Analysis Process:**
+```bash
+# Before committing Debt components, check:
+# 1. Does Debt/index.tsx import from debt.types.ts? → Include both
+# 2. Does useDebt.ts import from store/zustand? → Verify store is committed
+# 3. Do tests import from the component? → Include tests with component
+# 4. Are there cross-references to other actions? → Commit dependencies first
+```
+

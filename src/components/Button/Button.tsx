@@ -1,4 +1,3 @@
-import 'tailwindcss/tailwind.css'
 import { FC } from 'react'
 import { ButtonProps } from './button.types'
 

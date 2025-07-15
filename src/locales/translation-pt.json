@@ -8,5 +8,15 @@
     "home": "Começar",
     "contact": "Contato",
     "anchorTitle": "Página"
+  },
+  "dashboard": {
+    "title": "Cronômetro de Treinamento"
+  },
+  "timer": {
+    "cycles": "Ciclos"
+  },
+  "controllers": {
+    "start": "Iniciar",
+    "pause": "Pausar"
   }
 }
