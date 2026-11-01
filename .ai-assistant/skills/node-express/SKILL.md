@@ -1,7 +1,6 @@
 ---
+name: node-express
 description: Comprehensive Node.js and Express.js development standards and best practices for modern web development
-globs: ["**/*.js", "**/*.ts", "api/**/*", "services/**/*", "controllers/**/*", "routes/**/*"]
-alwaysApply: false
 ---
 <!--
 Rule Version: 1.0.0
@@ -143,7 +142,7 @@ api
 
 ### Protecting Sensitive Data
 - Never log sensitive information
-- Use fury secrets for secrets and credentials
+- Use deployment tooling secrets for secrets and credentials
 - Implement proper error handling to avoid leaking system details
 - Use HTTPS for all API communications
 

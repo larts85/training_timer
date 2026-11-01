@@ -1,7 +1,6 @@
 ---
-description:
-globs:
-alwaysApply: true
+name: frontend-code-review
+description: Repository guidance for frontend-code-review
 ---
 <!--
 Rule Version: 1.0.0

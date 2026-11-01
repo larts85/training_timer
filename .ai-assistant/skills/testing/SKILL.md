@@ -1,7 +1,6 @@
 ---
+name: testing
 description: Comprehensive testing guidelines and best practices for unit tests, integration tests, and test coverage
-globs:
-alwaysApply: true
 ---
 <!--
 Rule Version: 1.0.0
@@ -126,7 +125,7 @@ it('should handle empty CECO list with empty message', async () => {
   const emptyOption = screen.getByText('Nothing found')
   const emptyOptionElement = emptyOption.closest('[role="option"]')
   if (emptyOptionElement) {
-    expect(emptyOptionElement).toHaveClass('andes-list__item--disabled')
+    expect(emptyOptionElement).toHaveClass('list__item--disabled')
   }
 })
 ```
@@ -206,7 +205,7 @@ it('should show loading state with loading text', async () => {
   const loadingOption = screen.getByText('Loading...')
   const loadingOptionElement = loadingOption.closest('[role="option"]')
   if (loadingOptionElement) {
-    expect(loadingOptionElement).toHaveClass('andes-list__item--disabled')
+    expect(loadingOptionElement).toHaveClass('list__item--disabled')
   }
 })
 ```
@@ -284,7 +283,7 @@ it('should handle single CECO option correctly', async () => {
   expect(options).toHaveLength(1)
   const optionElement = options[0].closest('[role="option"]')
   if (optionElement) {
-    expect(optionElement).not.toHaveClass('andes-list__item--disabled')
+    expect(optionElement).not.toHaveClass('list__item--disabled')
   }
 
   // Verify no other CECOs are present
@@ -311,7 +310,7 @@ if (selector) {
 const emptyOption = screen.getByText('Nothing found')
 const emptyOptionElement = emptyOption.closest('[role="option"]')
 if (emptyOptionElement) {
-  expect(emptyOptionElement).toHaveClass('andes-list__item--disabled')
+  expect(emptyOptionElement).toHaveClass('list__item--disabled')
 }
 ```
 
@@ -570,4 +569,3 @@ afterEach(() => {
 description:
 globs:
 alwaysApply: false
----

@@ -1,14 +1,13 @@
 ---
+name: typescript
 description: Comprehensive TypeScript coding standards and best practices for modern, robust, and maintainable web development.
-globs: ["**/*.ts", "**/*.tsx", "**/*.d.ts", "**/*.jsx"]
-alwaysApply: true
 ---
 <!--
 Rule Version: 1.3.0
 Last Updated: 2025-01-08
 Last Updated By: AI Assistant
 Change Type: MINOR
-Description: Consolidated nordic-typescript.mdc rules into this file, removed Nordic-specific references for general project applicability
+Description: Consolidated repository-specific guidance rules into this file, removed -specific references for general project applicability
 -->
 
 # TypeScript Best Practices & Coding Standards
