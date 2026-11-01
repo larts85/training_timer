@@ -1,7 +1,6 @@
 ---
+name: react
 description: React best practices and patterns for modern web applications
-globs: **/*.tsx, **/*.jsx, components/**/*, nordic-pages/**/*, hooks/**/*, hocs/**/*, styles/**/*
-alwaysApply: true
 ---
 <!--
 Rule Version: 1.0.0
@@ -13,7 +12,7 @@ Description: Comprehensive React development guidelines and best practices for m
 
 # React Guidelines
 
-This guide outlines the best practices for using React in this Nordic frontend project. Following these practices will ensure maintainable, performant, and reliable React code.
+This guide outlines the best practices for using React in this  frontend project. Following these practices will ensure maintainable, performant, and reliable React code.
 
 ## Hooks
 
