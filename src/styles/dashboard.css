@@ -259,7 +259,7 @@
 .controllers-scroll {
   height: 380px;
   overflow-y: auto;
-  padding-right: 10px;
+  overflow-x: hidden;
 }
 
 /* Custom Scrollbar */
@@ -284,6 +284,7 @@
   margin-bottom: 18px;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .row-divider {

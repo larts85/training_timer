@@ -45,6 +45,37 @@ export const TimerControllerRow: React.FC<TimerControllerRowProps> = ({
     <div className="timer-controller-row">
       <div className="row-divider"></div>
 
+      <div className="row-name">{name}</div>
+
+      {hasToggle && (
+        <div className="row-toggle">
+          <button
+            className={`toggle-button ${isToggleOn ? 'active' : ''}`}
+            onClick={handleToggle}
+            aria-label={`Toggle ${name} reps mode`}
+          >
+            <div className="toggle-handle"></div>
+            {isToggleOn && (
+              <div className="toggle-icon">
+                <Image
+                  src="/icons/reps-icon.svg"
+                  alt="Reps"
+                  width={14}
+                  height={14}
+                />
+              </div>
+            )}
+          </button>
+        </div>
+      )}
+
+      <div className="row-input">
+        <div className="input-container">
+          <div className="input-background"></div>
+          <div className="input-value">{value}</div>
+        </div>
+      </div>
+
       <div className="button-container">
         <button
           className="increment-button"
@@ -69,37 +100,6 @@ export const TimerControllerRow: React.FC<TimerControllerRowProps> = ({
           />
         </button>
       </div>
-
-      <div className="row-input">
-        <div className="input-container">
-          <div className="input-background"></div>
-          <div className="input-value">{value}</div>
-        </div>
-      </div>
-
-      <div className="row-name">{name}</div>
-
-      {hasToggle && (
-        <div className="row-toggle">
-          <button
-            className={`toggle-button ${isToggleOn ? 'active' : ''}`}
-            onClick={handleToggle}
-            aria-label={`Toggle ${name} reps mode`}
-          >
-            <div className="toggle-handle"></div>
-            {isToggleOn && (
-              <div className="toggle-icon">
-                <Image
-                  src="/icons/reps-icon.svg"
-                  alt="Reps"
-                  width={14}
-                  height={14}
-                />
-              </div>
-            )}
-          </button>
-        </div>
-      )}
     </div>
   )
 }
